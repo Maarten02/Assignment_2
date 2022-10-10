@@ -38,20 +38,20 @@ class viper():
         return None
 
 
-    def pressure_turbine(self, efficiency, initial_pressure, tempr_ratio, gas=True):
+    def pressure_turbine(self, initial_pressure, tempr_ratio, gas=True):
         if gas == True:
-            exit_pressure = initial_pressure * (1-(1/efficiency)*(1-tempr_ratio))**(self.k_g/(self.k_g-1))
+            exit_pressure = initial_pressure * (1-(1/self.tur_eff)*(1-tempr_ratio))**(self.k_g/(self.k_g-1))
         else:
-            exit_pressure = initial_pressure * (1 - (1 / efficiency) * (1 - tempr_ratio)) ** (self.k_a / (self.k_a - 1))
+            exit_pressure = initial_pressure * (1 - (1 / self.tur_eff) * (1 - tempr_ratio)) ** (self.k_a / (self.k_a - 1))
         return exit_pressure
 
 
-    def temperature_compressor(self, efficiency, initial_temperature, pres_ratio, gas=False):
+    def temperature_compressor(self, initial_temperature, pres_ratio, gas=False):
         if gas == False:
-            exit_temperature = initial_temperature*(1 + (1/efficiency)*((pres_ratio)**((self.k_a-1)/self.k_a)-1))
+            exit_temperature = initial_temperature*(1 + (1/self.comp_eff)*((pres_ratio)**((self.k_a-1)/self.k_a)-1))
 
         else:
-            exit_temperature = initial_temperature * (1 + (1 / efficiency) * ((pres_ratio) ** ((self.k_g - 1) / self.k_g) - 1))
+            exit_temperature = initial_temperature * (1 + (1 / self.comp_eff) * ((pres_ratio) ** ((self.k_g - 1) / self.k_g) - 1))
 
         return exit_temperature
 
