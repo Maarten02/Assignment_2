@@ -18,6 +18,8 @@ class viper():
         self.cp_g = 1150            # [J/kg*K]
         self.k_a = 1.4              # [-]
         self.k_g = 1.33             # [-]
+        self.LHV = 43*10**6         # [J]
+        self.mech_eff = 0.99        # [-]
 
 
 
@@ -37,19 +39,32 @@ class viper():
 
 
     def pressure_turbine(self, efficiency, initial_pressure, tempr_ratio, gas=True):
-
-        exit_pressure = initial_pressure * (1 + efficiency)
+        if gas == True:
+            exit_pressure = initial_pressure * (1-(1/efficiency)*(1-tempr_ratio))**(self.k_g/(self.k_g-1))
+        else:
+            exit_pressure = initial_pressure * (1 - (1 / efficiency) * (1 - tempr_ratio)) ** (self.k_a / (self.k_a - 1))
         return exit_pressure
 
 
     def temperature_compressor(self, efficiency, initial_temperature, pres_ratio, gas=False):
         if gas == False:
-            T_2 = initial_temperature*(1 + (1/efficiency)*((pres_ratio)**((self.k_a-1)/self.k_a)-1))
+            exit_temperature = initial_temperature*(1 + (1/efficiency)*((pres_ratio)**((self.k_a-1)/self.k_a)-1))
 
         else:
-            T_2 = initial_temperature * (1 + (1 / efficiency) * ((pres_ratio) ** ((self.k_g - 1) / self.k_g) - 1))
+            exit_temperature = initial_temperature * (1 + (1 / efficiency) * ((pres_ratio) ** ((self.k_g - 1) / self.k_g) - 1))
 
-        return T_2
+        return exit_temperature
+
+    def combustion(self, initial_temperature):
+        return (self.m_dot_f*self.LHV*self.comb_eff)/(self.m_dot_air*self.cp_a) + initial_temperature
+
+    def temperature_turbine(self, T_2, T_3, T_4):
+        return T_4 - (self.m_dot_air*self.cp_a*(T_3-T_2))/(self.m_dot_f*self.cp_g*self.mech_eff)
+
+#p0 = pt0 = pt1 = pt2
+#T0 = Tt0 = Tt1= Tt2
+
+
 
 
 
