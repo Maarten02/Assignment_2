@@ -4,7 +4,7 @@ import pandas as pd
 
 class viper():
     def __init__(self):
-        self.Pi_comp = 5.5          # [-]
+        self.pres_ratio = 5.5          # [-]
         self.gross_thrust = 15167   # [N]
         self.m_dot_air = 23.81      # [kg/s]
         self.m_dot_f = 0.4267       # [kg/s]
@@ -20,6 +20,7 @@ class viper():
         self.k_g = 1.33             # [-]
         self.LHV = 43*10**6         # [J]
         self.mech_eff = 0.99        # [-]
+        self.R = 287                # [J/kg*K]
 
 
 
@@ -102,11 +103,19 @@ Pt4 = Pt3
 Tt4 = engine1.combustion(Tt3)
 m_dot4 = engine1.m_dot_f + engine1.m_dot_air
 
+# print(Pt4, '\t', Tt4)
+
+# calculate conditions after the turbine
+m_dot5 = m_dot4
+Tt5 = engine1.temperature_turbine(engine1.T_0, Tt3, Tt4, m_dot5)
+Pt5 = engine1.pressure_turbine(Pt4, Tt5/Tt4)
 
 
+# print(Pt5, '\t', Tt5)
 
-
-
+# calculate conditions in nozzle
+nozzle_calculation = engine1.nozzle(Pt5, Tt5, m_dot5)
+print(nozzle_calculation)
 
 
 
