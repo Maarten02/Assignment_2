@@ -9,9 +9,9 @@ class viper():
         self.m_dot_air = 23.81      # [kg/s]
         self.m_dot_f = 0.4267       # [kg/s]
         self.T_0 = 288              # [K]
-        self.p_0 = 1                # [bar]
-        self.tur_eff = 0.9          # [-]
-        self.comp_eff = 0.92        # [-]
+        self.p_0 = 100000            # [Pa]
+        self.tur_eff = 0.8          # [-]
+        self.comp_eff = 0.645        # [-]
         self.comb_eff = 1           # [-]
         self.nozz_eff = 1           # [-]
         self.cp_a = 1000            # [J/kg*K]
@@ -46,26 +46,61 @@ class viper():
         return exit_pressure
 
 
-    def temperature_compressor(self, initial_temperature, pres_ratio, gas=False):
+    def temperature_compressor(self, initial_temperature, gas=False):
         if gas == False:
-            exit_temperature = initial_temperature*(1 + (1/self.comp_eff)*((pres_ratio)**((self.k_a-1)/self.k_a)-1))
+            exit_temperature = initial_temperature*(1 + (1/self.comp_eff)*((self.pres_ratio)**((self.k_a-1)/self.k_a)-1))
 
         else:
-            exit_temperature = initial_temperature * (1 + (1 / self.comp_eff) * ((pres_ratio) ** ((self.k_g - 1) / self.k_g) - 1))
+            exit_temperature = initial_temperature * (1 + (1 / self.comp_eff) * ((self.pres_ratio) ** ((self.k_g - 1) / self.k_g) - 1))
 
         return exit_temperature
 
     def combustion(self, initial_temperature):
         return (self.m_dot_f*self.LHV*self.comb_eff)/(self.m_dot_air*self.cp_a) + initial_temperature
 
-    def temperature_turbine(self, T_2, T_3, T_4):
-        return T_4 - (self.m_dot_air*self.cp_a*(T_3-T_2))/(self.m_dot_f*self.cp_g*self.mech_eff)
+    def temperature_turbine(self, T_2, T_3, T_4, m_dot_5):
+        return T_4 - (self.m_dot_air*self.cp_a*(T_3-T_2))/(m_dot_5*self.cp_g*self.mech_eff)
+
+    def nozzle(self, p5, t5, m5, v_inf = 0):
+        choked = False
+        p_critical_ratio = (1- (1/self.nozz_eff)*((self.k_g-1)/(self.k_g+1)))**(-self.k_g/(self.k_g-1))
+        if p5/self.p_0 > p_critical_ratio:
+            choked = True
+        if choked:
+            nozzle_pressure = p5 / p_critical_ratio
+            nozzle_temperature = t5 * (2 / (self.k_g + 1))
+            v8 = np.sqrt(self.k_g*self.R*nozzle_temperature)
+            rho8 = nozzle_pressure/(self.R*nozzle_temperature)
+            nozzle_area = m5/(v8*rho8)
+            T_gross = m5* v8 + nozzle_area*(nozzle_pressure-self.p_0)
+
+        if not choked:
+            nozzle_pressure = self.p_0
+            nozzle_temperature = None
+
+
+        return nozzle_pressure, nozzle_temperature, nozzle_area, T_gross
 
 #p0 = pt0 = pt1 = pt2
 #T0 = Tt0 = Tt1= Tt2
 
 
+engine1 = viper()
 
+ambient_pressure = engine1.p_0
+
+# calculate conditions after compressor
+
+Pt3 = engine1.pres_ratio * engine1.p_0
+Tt3 = engine1.temperature_compressor(engine1.T_0)
+
+# print(Pt3, '\t', Tt3)
+
+# calculate conditions after combustion chamber
+
+Pt4 = Pt3
+Tt4 = engine1.combustion(Tt3)
+m_dot4 = engine1.m_dot_f + engine1.m_dot_air
 
 
 
