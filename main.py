@@ -68,7 +68,9 @@ class viper():
     def nozzle(self, p5, t5, m5, v_inf = 0):
         choked = False
 
-        p_critical_ratio = (1- (1/self.nozz_eff)*((self.k_g-1)/(self.k_g+1)))**(-self.k_g/(self.k_g-1))
+        p_critical_ratio = (1-(1/self.nozz_eff)*((self.k_g-1)/(self.k_g+1)))**(-self.k_g/(self.k_g-1))
+        print('critical pressure ratio', p_critical_ratio)
+        print('critical pressure = ', p5 / p_critical_ratio, '\nambient pressure = ', self.p_0)
         if p5/self.p_0 > p_critical_ratio:
             choked = True
         if choked:
@@ -83,7 +85,9 @@ class viper():
             nozzle_pressure = self.p_0
             nozzle_temperature = t5 - t5*self.nozz_eff*(1-(nozzle_pressure/p5)**((self.k_g-1)/self.k_g))
             v8 = np.sqrt(2*self.cp_g*(t5 - nozzle_temperature))
-            nozzle_area = 0
+            rho = nozzle_pressure / (self.R * nozzle_temperature)
+
+            nozzle_area = m5/(v8*rho)
             T_gross = m5*v8
 
 
@@ -93,7 +97,7 @@ class viper():
 #p0 = pt0 = pt1 = pt2
 #T0 = Tt0 = Tt1= Tt2
 
-
+#--------------------- exercise 1 ---------------------------------
 engine1 = viper()
 
 ambient_pressure = engine1.p_0
@@ -129,8 +133,9 @@ choked = nozzle_calculation[4]
 if choked:
     print('the nozzle is choked')
 if not choked:
-    print('the nozzle is not unchoked')
-
+    print('the nozzle for engine1 is not choked')
+# print(nozzle_calculation[3])
+print('gross thrust (1) = ', nozzle_calculation[3], ' [N]')
 # -------------------- exercise 2 --------------------
 engine2 = viper()
 
@@ -147,5 +152,62 @@ Tt5_2 = engine2.temperature_turbine(engine2.p_0, Tt3_2, Tt4_2, engine2.m_dot_f+e
 Pt_5 = engine2.pressure_turbine(Pt3_2, (Tt5_2/Tt4_2))
 
 
-print(engine2.m_dot_f, '\t', Tt5_2, '\t', Pt_5)
+print(engine2.m_dot_f, '\t', Tt5_2, '\t', Pt5_2)
+
+# calculate conditions in nozzle
+nozzle_calculation = engine2.nozzle(Pt5_2, Tt5_2, m_dot5_2)
+A_n = nozzle_calculation[2]
+A_t = A_n*(Pt5_2/Pt4_2)**((2*engine2.k_g-(engine2.k_g-1))/(2*engine2.k_g))
+choked = nozzle_calculation[4]
+if choked:
+    print('the nozzle for engine2 is choked')
+if not choked:
+    print('the nozzle for engine2 is not choked')
+print('gross thrust (2) = ', nozzle_calculation[3], ' [N]')
+
+# -------------------- exercise 3 --------------------
+engine3 = viper()
+engine3.p_0 = 0.2454 *10**5 # [Pa]
+engine3.T_0 = 220 # [K]
+pt_2_3 = engine3.p_0 * (1 + ((engine3.k_a - 1)/2)*0.78**2)**(engine3.k_a/(engine3.k_a-1))
+Tt_2_3 = engine3.T_0 * (1+ ((engine3.k_a - 1)/ 2)*0.78**2)
+print('inlet total pressure = ', pt_2_3, '[Pa] \ninlet total temperature = ', Tt_2_3, '[K]')
+
+# calculate properties after compressor stage
+Pt3_3 = engine3.pres_ratio * engine3.p_0
+Tt3_3 = engine3.temperature_compressor(engine3.T_0)
+
+# calculate properties after combustion stage
+Tt4_3 = 1150 # [K]
+engine3.m_dot_air = 23.81
+engine3.m_dot_f = engine3.m_fuel_rate(Tt3_3, Tt4_3)
+Pt4_3 = Pt3_3
+
+Tt5_3 = engine3.temperature_turbine(engine3.T_0, Tt3_3, Tt4_3, engine3.m_dot_f+engine3.m_dot_air)
+Pt5_3 = engine3.pressure_turbine(Pt4_3, (Tt5_3/Tt4_3))
+m_dot5_3 = engine3.m_dot_air + engine3.m_dot_f
+
+
+print(engine3.m_dot_f, '\t', Tt5_3, '\t', Pt5_3)
+
+# calculate conditions in nozzle
+nozzle_calculation_3 = engine3.nozzle(Pt5_2, Tt5_2, m_dot5_2)
+A_n_3 = nozzle_calculation[2]
+A_t_3 = A_n*(Pt5_3/Pt4_3)**((2*engine3.k_g-(engine3.k_g-1))/(2*engine3.k_g))
+choked = nozzle_calculation_3[4]
+if choked:
+    print('the nozzle for engine3 is choked')
+if not choked:
+    print('the nozzle for engine3 is not choked')
+print('gross thrust (3) = ', nozzle_calculation_3[3], ' [N]')
+
+
+
+# ------------ Questions --------------------
+
+# - for gross thrust: is that with or without ambient pressure?
+# - An and At: at which stations are they
+# - how to calculate massflow for engine at flight conditions?
+
+
 
