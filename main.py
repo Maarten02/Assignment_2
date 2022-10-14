@@ -53,16 +53,16 @@ class viper():
     def pressure_turbine(self):
         '''
         calculate the exit presssure across a turbine stage as a function of the temperature ratio and the initial temperature
-        :return: Pt_4
         '''
+
         tempr_ratio = self.Tt_5 / self.Tt_4
         self.pt_5 = self.pt_4 * (1 - (1 / self.tur_eff) * (1 - tempr_ratio)) ** (self.k_g / (self.k_g - 1))
 
     def compressor(self):
         '''
         calculate the exit temperature across a compressor stage as a function of the initial temperature and the pressure ratio
-        :return: Tt_3
         '''
+
         self.pt_3 = self.pt_2 * self.pres_ratio
         self.Tt_3 = self.Tt_2 * (1 + (1 / self.comp_eff) * ((self.pres_ratio) ** ((self.k_a - 1) / self.k_a) - 1))
 
@@ -70,8 +70,8 @@ class viper():
         '''
         calculate the exit temperature of the combustion chamber as a function of CC inlet temp
         assuming fuel massflow is known
-        :return: Tt_4
         '''
+
         self.pt_4 = self.pt_3
         self.Tt_4 = (self.m_dot_f*self.LHV*self.comb_eff)/(self.m_dot_air*self.cp_g) + self.Tt_3
         self.m_dot_4 = self.m_dot_f + self.m_dot_air
@@ -79,15 +79,15 @@ class viper():
     def temperature_turbine(self):
         '''
         calculate exit temperature of turbine stage based on power balance with compressor
-        :return: Tt_5
         '''
+
         self.Tt_5 = self.Tt_4 - (self.m_dot_air*self.cp_a*(self.Tt_3-self.Tt_2))/(self.m_dot_4*self.cp_g*self.mech_eff)
 
     def m_fuel_rate(self):
         '''
         calculate fuel massflow based on temperature difference across combustion chamber
-        :return: m_dot_f
         '''
+
         self.m_dot_f = (self.m_dot_air*self.cp_g*(self.Tt_4 - self.Tt_3))/(self.comb_eff*self.LHV)
         self.m_dot_4 = self.m_dot_air + self.m_dot_f
         self.pt_4 = self.pt_3
@@ -95,7 +95,6 @@ class viper():
     def nozzle(self):
         '''
         caclulate flow condition at nozzle throat for either a choked or unchoked nozzle
-        :return: nozzle_pressure, nozzle_temperature, nozzle_area, gross_thrust, choked
         '''
 
         p_critical_ratio = (1-(1/self.nozz_eff)*((self.k_g-1)/(self.k_g+1)))**(-self.k_g/(self.k_g-1))
@@ -136,28 +135,10 @@ class viper():
         if self.choked:
             print('this engine is choked')
         else:
-            print('this engine is unchoked')
+            print('this engine is not choked')
 
 
 #--------------------- exercise 1 ---------------------------------
-
-#p0 = pt0 = pt1 = pt2 << REMOVE IF NOT USED
-#T0 = Tt0 = Tt1= Tt2 << REMOVE IF NOT USED
-
-# ambient_pressure = engine1.p_0 << REMOVE IF NOT USED
-# print(Pt3, '\t', Tt3)
-# print(Pt4, '\t', Tt4)
-
-
-# if choked:
-#     print('the nozzle for engine1 is choked')
-# if not choked:
-#     print('the nozzle for engine1 is not choked')
-# # print(nozzle_calculation[3])
-# print('gross thrust (1) = ', nozzle_calculation[3], ' [N]')
-
-#--------------------------------------------------------------------
-
 engine1 = viper()
 engine1.engine_ID = 1
 engine1.Tt_2 = engine1.T_0
@@ -208,6 +189,7 @@ engine3.Tt_2 = engine3.T_0 * (1+ ((engine3.k_a - 1)/ 2)*0.78**2)
 engine3.Tt_4 = 1150  # [K]
 engine3.m_dot_4 = engine3.m_dot_air
 engine3.nozzle_area = engine2.nozzle_area
+
 # calculate properties after compressor stage
 for iteration in range(10):
     print(engine3.m_dot_air)
@@ -228,17 +210,7 @@ for iteration in range(10):
         engine3.m_dot_air = engine3.m_dot_4
         engine3.cruise = False
 
-
-# engine3.m_fuel_rate()
-# engine3.temperature_turbine()
-
-
-
 #--------------- printing results ------------------
-
-# print('critical pressure ratio', p_critical_ratio)
-# print('critical pressure = ', p5 / p_critical_ratio, '\nambient pressure = ', self.p_0)
-
 names = ['exit massflow', 'gross thrust', 'fuel massflow']
 values = [engine3.m_dot_4, engine3.gross_thrust, engine3.m_dot_f]
 units = ['kg/s', 'N', 'kg/s']
