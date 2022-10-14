@@ -210,11 +210,15 @@ engine3.m_dot_4 = engine3.m_dot_air
 engine3.nozzle_area = engine2.nozzle_area
 # calculate properties after compressor stage
 for iteration in range(10):
-
+    print(engine3.m_dot_air)
     engine3.compressor()
 
     # calculate properties after combustion stage
-    engine3.pt_4 = engine3.pt_3
+    if iteration != 0:
+        engine3.m_fuel_rate()
+    else:
+        engine3.pt_4 = engine3.pt_3
+
     engine3.temperature_turbine()
     engine3.pressure_turbine()
 
@@ -222,9 +226,8 @@ for iteration in range(10):
     engine3.nozzle()
     if iteration == 0:
         engine3.m_dot_air = engine3.m_dot_4
+        engine3.cruise = False
 
-    engine3.m_fuel_rate()
-    print(engine3.m_dot_air)
 
 # engine3.m_fuel_rate()
 # engine3.temperature_turbine()
