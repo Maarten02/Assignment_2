@@ -67,6 +67,7 @@ class viper():
 
     def nozzle(self, p5, t5, m5, v_inf = 0):
         choked = False
+
         p_critical_ratio = (1- (1/self.nozz_eff)*((self.k_g-1)/(self.k_g+1)))**(-self.k_g/(self.k_g-1))
         if p5/self.p_0 > p_critical_ratio:
             choked = True
@@ -85,7 +86,7 @@ class viper():
 
 
 
-        return nozzle_pressure, nozzle_temperature, nozzle_area, T_gross
+        return nozzle_pressure, nozzle_temperature, nozzle_area, T_gross, choked
 
 #p0 = pt0 = pt1 = pt2
 #T0 = Tt0 = Tt1= Tt2
