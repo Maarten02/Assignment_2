@@ -4,6 +4,12 @@ import pandas as pd
 
 class viper():
     def __init__(self):
+
+        # --- miscellaneaous parameters ---
+        self.engine_ID = None
+        self.cruise = False
+        self.A_t = None
+        self.A_n = None
         self.pres_ratio = 5.5          # [-]
         self.gross_thrust = 15167   # [N]
         self.m_dot_air = 23.81      # [kg/s]
@@ -21,195 +27,228 @@ class viper():
         self.LHV = 43*10**6         # [J]
         self.mech_eff = 0.99        # [-]
         self.R = 287                # [J/kg*K]
+        self.nozzle_area = None     # [m^2]
+        self.gross_thrust = None    # [N]
 
+        # --- station parameters ---
+        self.Tt_1 = None
+        self.pt_1 = None
+        self.Tt_2 = None
+        self.pt_2 = None
+        self.Tt_3 = None
+        self.pt_3 = None
 
+        # --- after combustion chamber ---
+        self.Tt_4 = None
+        self.pt_4 = None
+        self.m_dot_4 = None
+        self.Tt_5 = None
+        self.pt_5 = None
+        self.Tt_8 = None
+        self.pt_8 = None
+        self.rho_8 = None
+        self.choked = False
+        self.v_8 = None
 
-    def scenario_1(self):
+    def pressure_turbine(self):
         '''
-        Scenario 1:
-        test-bed assuming choked turbine and propulsive nozzle
-        calculate:
-
-        is the nozzle choked?
-        what is the turbine to propulsive nozzle area ratio
+        calculate the exit presssure across a turbine stage as a function of the temperature ratio and the initial temperature
+        :return: Pt_4
         '''
+        tempr_ratio = self.Tt_5 / self.Tt_4
+        self.pt_5 = self.pt_4 * (1 - (1 / self.tur_eff) * (1 - tempr_ratio)) ** (self.k_g / (self.k_g - 1))
 
+    def compressor(self):
+        '''
+        calculate the exit temperature across a compressor stage as a function of the initial temperature and the pressure ratio
+        :return: Tt_3
+        '''
+        self.pt_3 = self.pt_2 * self.pres_ratio
+        self.Tt_3 = self.Tt_2 * (1 + (1 / self.comp_eff) * ((self.pres_ratio) ** ((self.k_a - 1) / self.k_a) - 1))
 
+    def combustion(self):
+        '''
+        calculate the exit temperature of the combustion chamber as a function of CC inlet temp
+        assuming fuel massflow is known
+        :return: Tt_4
+        '''
+        self.pt_4 = self.pt_3
+        self.Tt_4 = (self.m_dot_f*self.LHV*self.comb_eff)/(self.m_dot_air*self.cp_g) + self.Tt_3
+        self.m_dot_4 = self.m_dot_f + self.m_dot_air
 
-        return None
+    def temperature_turbine(self):
+        '''
+        calculate exit temperature of turbine stage based on power balance with compressor
+        :return: Tt_5
+        '''
+        self.Tt_5 = self.Tt_4 - (self.m_dot_air*self.cp_a*(self.Tt_3-self.Tt_2))/(self.m_dot_4*self.cp_g*self.mech_eff)
 
+    def m_fuel_rate(self):
+        '''
+        calculate fuel massflow based on temperature difference across combustion chamber
+        :return: m_dot_f
+        '''
+        self.m_dot_f = (self.m_dot_air*self.cp_g*(self.Tt_4 - self.Tt_3))/(self.comb_eff*self.LHV)
+        self.m_dot_4 = self.m_dot_air + self.m_dot_f
+        self.pt_4 = self.pt_3
 
-    def pressure_turbine(self, initial_pressure, tempr_ratio, gas=True):
-        if gas == True:
-            exit_pressure = initial_pressure * (1-(1/self.tur_eff)*(1-tempr_ratio))**(self.k_g/(self.k_g-1))
-        else:
-            exit_pressure = initial_pressure * (1 - (1 / self.tur_eff) * (1 - tempr_ratio)) ** (self.k_a / (self.k_a - 1))
-        return exit_pressure
-
-
-    def temperature_compressor(self, initial_temperature, gas=False):
-        if gas == False:
-            exit_temperature = initial_temperature*(1 + (1/self.comp_eff)*((self.pres_ratio)**((self.k_a-1)/self.k_a)-1))
-
-        else:
-            exit_temperature = initial_temperature * (1 + (1 / self.comp_eff) * ((self.pres_ratio) ** ((self.k_g - 1) / self.k_g) - 1))
-
-        return exit_temperature
-
-    def combustion(self, initial_temperature):
-        return (self.m_dot_f*self.LHV*self.comb_eff)/(self.m_dot_air*self.cp_g) + initial_temperature
-
-    def temperature_turbine(self, T_2, T_3, T_4, m_dot_5):
-        return T_4 - (self.m_dot_air*self.cp_a*(T_3-T_2))/(m_dot_5*self.cp_g*self.mech_eff)
-
-    def m_fuel_rate(self, T_3, T_4):
-        return (self.m_dot_air*self.cp_g*(T_4-T_3))/(self.comb_eff*self.LHV)
-
-    def nozzle(self, p5, t5, m5, v_inf = 0):
-        choked = False
+    def nozzle(self):
+        '''
+        caclulate flow condition at nozzle throat for either a choked or unchoked nozzle
+        :return: nozzle_pressure, nozzle_temperature, nozzle_area, gross_thrust, choked
+        '''
 
         p_critical_ratio = (1-(1/self.nozz_eff)*((self.k_g-1)/(self.k_g+1)))**(-self.k_g/(self.k_g-1))
-        print('critical pressure ratio', p_critical_ratio)
-        print('critical pressure = ', p5 / p_critical_ratio, '\nambient pressure = ', self.p_0)
-        if p5/self.p_0 > p_critical_ratio:
-            choked = True
-        if choked:
-            nozzle_pressure = p5 / p_critical_ratio
-            nozzle_temperature = t5 * (2 / (self.k_g + 1))
-            v8 = np.sqrt(self.k_g*self.R*nozzle_temperature)
-            rho8 = nozzle_pressure/(self.R*nozzle_temperature)
-            nozzle_area = m5/(v8*rho8)
-            T_gross = m5 * v8 + nozzle_area*(nozzle_pressure-self.p_0) #check
 
-        if not choked:
-            nozzle_pressure = self.p_0
-            nozzle_temperature = t5 - t5*self.nozz_eff*(1-(nozzle_pressure/p5)**((self.k_g-1)/self.k_g))
-            v8 = np.sqrt(2*self.cp_g*(t5 - nozzle_temperature))
-            rho = nozzle_pressure / (self.R * nozzle_temperature)
+        if self.pt_5/self.p_0 > p_critical_ratio:
+            self.choked = True
 
-            nozzle_area = m5/(v8*rho)
-            T_gross = m5*v8
+        if self.choked:
+            self.pt_8 = self.pt_5 / p_critical_ratio                         # Calculate nozzle pressure using expansion up to M=1
+            self.Tt_8 = self.Tt_5 * (2 / (self.k_g + 1))                     # calculate nozzle temperature using expansion up to M=1
+            self.v_8 = np.sqrt(self.k_g * self.R * self.Tt_8)                # calculate speed of sound in nozzle, equal to jet velocity
+            self.rho_8 = self.pt_8 / (self.R * self.Tt_8)                      # calculate density in the nozzle
+            if not self.cruise:
+                self.nozzle_area = self.m_dot_4 / (self.v_8 * self.rho_8)        # calculate nozzle area using continuity
+            else:
+                self.m_dot_4 = self.nozzle_area * self.v_8 * self.rho_8
+            self.gross_thrust = self.m_dot_4 * self.v_8 + self.nozzle_area * (self.pt_8 - self.p_0)  # calculate gross thrust
+
+        if not self.choked:
+            self.pt_8 = self.p_0                                             # equate nozzle pressure to ambient pressure
+            self.Tt_8 = self.Tt_5 - self.Tt_5 * self.nozz_eff * (1 - (self.pt_8 / self.pt_5) ** ((self.k_g-1) / self.k_g))    # calculate nozzle temperature based on expansion to P_ambient
+            self.v_8 = np.sqrt(2 * self.cp_g * (self.Tt_5 - self.Tt_8))      # calculate jet velocity based on conservation of total enthalpy
+            self.rho_8 = self.pt_8 / (self.R * self.Tt_8)                    # calculate density in the nozzle using ideal gas law
+            if not self.cruise:
+                self.nozzle_area = self.m_dot_4 / (self.v_8 * self.rho_8)        # calculate nozzle area using continuity
+            else:
+                self.m_dot_4 = self.nozzle_area * self.v_8 * self.rho_8
+            self.gross_thrust = self.m_dot_4 * self.v_8                      # calculate gross thrust
+
+        self.A_t = self.nozzle_area * (self.pt_5 / self.pt_4) ** ((2 * self.k_g - (self.k_g - 1)) / (2 * self.k_g))
 
 
+    def printing(self, names, values, units):
+        print('\n--- results for engine', self.engine_ID, '---')
+        for value, name, unit in zip(values, names, units):
+            print(name,' = ',  '%.2f' % value, ' [', unit, ']')
 
-        return nozzle_pressure, nozzle_temperature, nozzle_area, T_gross, choked
+        if self.choked:
+            print('this engine is choked')
+        else:
+            print('this engine is unchoked')
 
-#p0 = pt0 = pt1 = pt2
-#T0 = Tt0 = Tt1= Tt2
 
 #--------------------- exercise 1 ---------------------------------
-engine1 = viper()
 
-ambient_pressure = engine1.p_0
+#p0 = pt0 = pt1 = pt2 << REMOVE IF NOT USED
+#T0 = Tt0 = Tt1= Tt2 << REMOVE IF NOT USED
 
-# calculate conditions after compressor
-
-Pt3_1 = engine1.pres_ratio * engine1.p_0
-Tt3_1 = engine1.temperature_compressor(engine1.T_0)
-
+# ambient_pressure = engine1.p_0 << REMOVE IF NOT USED
 # print(Pt3, '\t', Tt3)
-
-# calculate conditions after combustion chamber
-
-Pt4_1 = Pt3_1
-Tt4_1 = engine1.combustion(Tt3_1)
-m_dot4_1 = engine1.m_dot_f + engine1.m_dot_air
-
 # print(Pt4, '\t', Tt4)
 
+
+# if choked:
+#     print('the nozzle for engine1 is choked')
+# if not choked:
+#     print('the nozzle for engine1 is not choked')
+# # print(nozzle_calculation[3])
+# print('gross thrust (1) = ', nozzle_calculation[3], ' [N]')
+
+#--------------------------------------------------------------------
+
+engine1 = viper()
+engine1.engine_ID = 1
+engine1.Tt_2 = engine1.T_0
+engine1.pt_2 = engine1.p_0
+
+# calculate conditions after compressor
+engine1.compressor()
+
+# calculate conditions after combustion chamber
+engine1.combustion()
+
 # calculate conditions after the turbine
-m_dot5_1 = m_dot4_1
-Tt5_1 = engine1.temperature_turbine(engine1.T_0, Tt3_1, Tt4_1, m_dot5_1)
-Pt5_1 = engine1.pressure_turbine(Pt4_1, Tt5_1/Tt4_1)
-
-
-# print(Pt5, '\t', Tt5)
+engine1.temperature_turbine()
+engine1.pressure_turbine()
 
 # calculate conditions in nozzle
-nozzle_calculation = engine1.nozzle(Pt5_1, Tt5_1, m_dot5_1)
-A_n = nozzle_calculation[2]
-A_t = A_n*(Pt5_1/Pt4_1)**((2*engine1.k_g-(engine1.k_g-1))/(2*engine1.k_g))
-choked = nozzle_calculation[4]
-if choked:
-    print('the nozzle for engine1 is choked')
-if not choked:
-    print('the nozzle for engine1 is not choked')
-# print(nozzle_calculation[3])
-print('gross thrust (1) = ', nozzle_calculation[3], ' [N]')
+engine1.nozzle()
+
 # -------------------- exercise 2 --------------------
 engine2 = viper()
-
+engine2.engine_ID = 2
+engine2.Tt_2 = engine2.T_0
+engine2.pt_2 = engine2.p_0
 
 # calculate properties after compressor stage
-Pt3_2 = engine2.pres_ratio * engine2.p_0
-Tt3_2 = engine2.temperature_compressor(engine2.T_0)
+engine2.compressor()
 
 # calculate properties after combustion stage
-Tt4_2 = 900 # [K]
-engine2.m_dot_f = engine2.m_fuel_rate(Tt3_2, Tt4_2)
-Pt4_2 = Pt3_2
+engine2.Tt_4 = 900 # [K]
+engine2.m_fuel_rate()
 
-Tt5_2 = engine2.temperature_turbine(engine2.T_0, Tt3_2, Tt4_2, engine2.m_dot_f+engine2.m_dot_air)
-Pt5_2 = engine2.pressure_turbine(Pt4_2, (Tt5_2/Tt4_2))
-m_dot5_2 = engine2.m_dot_air + engine2.m_dot_f
-
-
-print(engine2.m_dot_f, '\t', Tt5_2, '\t', Pt5_2)
+engine2.temperature_turbine()
+engine2.pressure_turbine()
 
 # calculate conditions in nozzle
-nozzle_calculation = engine2.nozzle(Pt5_2, Tt5_2, m_dot5_2)
-A_n = nozzle_calculation[2]
-A_t = A_n*(Pt5_2/Pt4_2)**((2*engine2.k_g-(engine2.k_g-1))/(2*engine2.k_g))
-choked = nozzle_calculation[4]
-if choked:
-    print('the nozzle for engine2 is choked')
-if not choked:
-    print('the nozzle for engine2 is not choked')
-print('gross thrust (2) = ', nozzle_calculation[3], ' [N]')
+engine2.nozzle()
 
 # -------------------- exercise 3 --------------------
 engine3 = viper()
+engine3.engine_ID = 3
+engine3.cruise = True
+
 engine3.p_0 = 0.2454 *10**5 # [Pa]
 engine3.T_0 = 220 # [K]
-pt_2_3 = engine3.p_0 * (1 + ((engine3.k_a - 1)/2)*0.78**2)**(engine3.k_a/(engine3.k_a-1))
-Tt_2_3 = engine3.T_0 * (1+ ((engine3.k_a - 1)/ 2)*0.78**2)
-print('inlet total pressure = ', pt_2_3, '[Pa] \ninlet total temperature = ', Tt_2_3, '[K]')
+engine3.pt_2 = engine3.p_0 * (1 + ((engine3.k_a - 1)/2)*0.78**2)**(engine3.k_a/(engine3.k_a-1))
+engine3.Tt_2 = engine3.T_0 * (1+ ((engine3.k_a - 1)/ 2)*0.78**2)
 
+engine3.Tt_4 = 1150  # [K]
+engine3.m_dot_4 = engine3.m_dot_air
+engine3.nozzle_area = engine2.nozzle_area
 # calculate properties after compressor stage
-Pt3_3 = engine3.pres_ratio * engine3.p_0
-Tt3_3 = engine3.temperature_compressor(engine3.T_0)
+for iteration in range(10):
 
-# calculate properties after combustion stage
-Tt4_3 = 1150 # [K]
-engine3.m_dot_air = 23.81
-engine3.m_dot_f = engine3.m_fuel_rate(Tt3_3, Tt4_3)
-Pt4_3 = Pt3_3
+    engine3.compressor()
 
-Tt5_3 = engine3.temperature_turbine(engine3.T_0, Tt3_3, Tt4_3, engine3.m_dot_f+engine3.m_dot_air)
-Pt5_3 = engine3.pressure_turbine(Pt4_3, (Tt5_3/Tt4_3))
-m_dot5_3 = engine3.m_dot_air + engine3.m_dot_f
+    # calculate properties after combustion stage
+    engine3.pt_4 = engine3.pt_3
+    engine3.temperature_turbine()
+    engine3.pressure_turbine()
 
+    # calculate conditions in nozzle
+    engine3.nozzle()
+    if iteration == 0:
+        engine3.m_dot_air = engine3.m_dot_4
 
-print(engine3.m_dot_f, '\t', Tt5_3, '\t', Pt5_3)
+    engine3.m_fuel_rate()
+    print(engine3.m_dot_air)
 
-# calculate conditions in nozzle
-nozzle_calculation_3 = engine3.nozzle(Pt5_2, Tt5_2, m_dot5_2)
-A_n_3 = nozzle_calculation[2]
-A_t_3 = A_n*(Pt5_3/Pt4_3)**((2*engine3.k_g-(engine3.k_g-1))/(2*engine3.k_g))
-choked = nozzle_calculation_3[4]
-if choked:
-    print('the nozzle for engine3 is choked')
-if not choked:
-    print('the nozzle for engine3 is not choked')
-print('gross thrust (3) = ', nozzle_calculation_3[3], ' [N]')
+# engine3.m_fuel_rate()
+# engine3.temperature_turbine()
 
 
 
+#--------------- printing results ------------------
+
+# print('critical pressure ratio', p_critical_ratio)
+# print('critical pressure = ', p5 / p_critical_ratio, '\nambient pressure = ', self.p_0)
+
+names = ['exit massflow', 'gross thrust', 'fuel massflow']
+values = [engine3.m_dot_4, engine3.gross_thrust, engine3.m_dot_f]
+units = ['kg/s', 'N', 'kg/s']
+
+
+engine3.printing(names, values, units)
 # ------------ Questions --------------------
 
 # - for gross thrust: is that with or without ambient pressure?
+# with
 # - An and At: at which stations are they
+# An is at the turbine exit, At is at turbine inlet
 # - how to calculate massflow for engine at flight conditions?
-
+# throat area is known, use that to find massflow at altitude
 
 
