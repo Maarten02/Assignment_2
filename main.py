@@ -11,7 +11,7 @@ class viper():
         self.T_0 = 288              # [K]
         self.p_0 = 100000           # [Pa]
         self.tur_eff = 0.8          # [-]
-        self.comp_eff = 0.645       # [-]
+        self.comp_eff = 0.78       # [-]
         self.comb_eff = 1           # [-]
         self.nozz_eff = 1           # [-]
         self.cp_a = 1000            # [J/kg*K]
@@ -131,7 +131,7 @@ A_n = nozzle_calculation[2]
 A_t = A_n*(Pt5_1/Pt4_1)**((2*engine1.k_g-(engine1.k_g-1))/(2*engine1.k_g))
 choked = nozzle_calculation[4]
 if choked:
-    print('the nozzle is choked')
+    print('the nozzle for engine1 is choked')
 if not choked:
     print('the nozzle for engine1 is not choked')
 # print(nozzle_calculation[3])
@@ -147,9 +147,11 @@ Tt3_2 = engine2.temperature_compressor(engine2.T_0)
 # calculate properties after combustion stage
 Tt4_2 = 900 # [K]
 engine2.m_dot_f = engine2.m_fuel_rate(Tt3_2, Tt4_2)
+Pt4_2 = Pt3_2
 
-Tt5_2 = engine2.temperature_turbine(engine2.p_0, Tt3_2, Tt4_2, engine2.m_dot_f+engine2.m_dot_air)
-Pt_5 = engine2.pressure_turbine(Pt3_2, (Tt5_2/Tt4_2))
+Tt5_2 = engine2.temperature_turbine(engine2.T_0, Tt3_2, Tt4_2, engine2.m_dot_f+engine2.m_dot_air)
+Pt5_2 = engine2.pressure_turbine(Pt4_2, (Tt5_2/Tt4_2))
+m_dot5_2 = engine2.m_dot_air + engine2.m_dot_f
 
 
 print(engine2.m_dot_f, '\t', Tt5_2, '\t', Pt5_2)
