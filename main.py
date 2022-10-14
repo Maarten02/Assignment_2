@@ -77,12 +77,14 @@ class viper():
             v8 = np.sqrt(self.k_g*self.R*nozzle_temperature)
             rho8 = nozzle_pressure/(self.R*nozzle_temperature)
             nozzle_area = m5/(v8*rho8)
-            T_gross = m5 * v8 + nozzle_area*(nozzle_pressure-self.p_0)
+            T_gross = m5 * v8 + nozzle_area*(nozzle_pressure-self.p_0) #check
 
         if not choked:
             nozzle_pressure = self.p_0
             nozzle_temperature = t5 - t5*self.nozz_eff*(1-(nozzle_pressure/p5)**((self.k_g-1)/self.k_g))
             v8 = np.sqrt(2*self.cp_g*(t5 - nozzle_temperature))
+            nozzle_area = 0
+            T_gross = m5*v8
 
 
 
