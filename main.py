@@ -1,6 +1,6 @@
 
 import numpy as np
-import pandas as pd
+
 
 class viper():
     def __init__(self):
@@ -217,13 +217,6 @@ units = ['kg/s', 'N', 'kg/s']
 
 
 engine3.printing(names, values, units)
-# ------------ Questions --------------------
 
-# - for gross thrust: is that with or without ambient pressure?
-# with
-# - An and At: at which stations are they
-# An is at the turbine exit, At is at turbine inlet
-# - how to calculate massflow for engine at flight conditions?
-# throat area is known, use that to find massflow at altitude
 
 
