@@ -211,12 +211,20 @@ for iteration in range(10):
         engine3.cruise = False
 
 #--------------- printing results ------------------
-names = ['exit massflow', 'gross thrust', 'fuel massflow']
-values = [engine3.m_dot_4, engine3.gross_thrust, engine3.m_dot_f]
-units = ['kg/s', 'N', 'kg/s']
+names1 = ['turbine to nozzle area ratio', 'gross thrust']
+values1 = [engine1.A_t/engine1.nozzle_area, engine1.gross_thrust]
+units1 = ['-', 'N']
+engine1.printing(names1, values1, units1)
 
 
-engine3.printing(names, values, units)
+names3 = ['exit massflow', 'gross thrust', 'fuel massflow', 'inlet total pressure', 'inlet total temperature', 'compressor work']
+values3 = [engine3.m_dot_4, engine3.gross_thrust, engine3.m_dot_f, engine3.pt_2, engine3.Tt_2, (engine3.Tt_3-engine3.Tt_2)*engine3.cp_a*engine3.m_dot_air]
+units3 = ['kg/s', 'N', 'kg/s', 'Pa', 'K', 'w']
 
+
+engine3.printing(names3, values3, units3)
+# ------------ Questions --------------------
+
+# - How can the are ratio of turbine to nozzle be smaller than 1 if the turbine is already choked, wouldn't that mean that flow would go supersonic??
 
 
