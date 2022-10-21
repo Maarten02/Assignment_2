@@ -4,11 +4,13 @@ import math
 
 class compressor():
     def __init__(self):
+        self.k = 1.4 # [-]
+        self.R = 287 # [J/kg*K]
         self.stages = []
         self.overall_pressure_ratio = 5.5
-        self.inlet_pressure = 100
-        self.inlet_temperature = 100
-        self.inlet_density = 100
+        self.inlet_pressure = 36678.87
+        self.inlet_temperature = 246.77
+        self.inlet_density = self.inlet_pressure / (self.R * self.inlet_temperature)
 
         self.n_stages = 7
         self.phi_stage = 0.4
@@ -32,10 +34,9 @@ class compressor():
 
         self.U_meanline = None
 
-        self.k = 1.4 # [-]
-        self.R = 287 # [J/kg*K]
+
         self.m_dot_air = 12.6534 # [kg/s]
-        self.spec_work_stage = self.power_per_stage / self.m_dot_air
+        self.spec_work_stage = self.work_per_stage / self.m_dot_air
 
         self.alpha_1 = math.radians(23.2)
         self.alpha_2 = math.radians(45)
@@ -66,7 +67,7 @@ class compressor():
         self.U_meanline = np.sqrt(self.spec_work_stage/self.psi_stage)
 
     def Radius_mean(self):
-        self.mean_radius = self.U_meanline/ self.Omega
+        self.mean_radius = self.U_meanline / self.Omega
 
     def v_abs_exit(self, U):
         return U / (np.sin(self.alpha_2)-np.cos(self.alpha_2)*np.tan(self.beta_2))
@@ -81,17 +82,17 @@ class compressor():
         return 1 + M**2*(self.k-1)*self.psi_stage
 
     def p_ratio(self, T_ratio, stage_eff):
-        return (1 + stage_eff*T_ratio)**(self.k/ (self.k-1))
+        return (1 + stage_eff*(T_ratio-1))**(self.k / (self.k-1))
 
     def density(self, pressure, temperature):
-        return pressure/ (self.R* temperature)
+        return pressure / (self.R* temperature)
 
     def blade_length(self, density, abs_velocity):
         '''assumption: velocity at mean radius is the mean velocity along the entire blade'''
         area = self.m_dot_air/(density*abs_velocity)
         return area/(2*np.pi*self.mean_radius)
 
-    def tip_radii(self, blade_length):
+    def tip_radius(self, blade_length):
         return self.mean_radius + blade_length*0.5
 
     def stage_loop(self):
@@ -102,20 +103,45 @@ class compressor():
 
 
         for i in range(self.n_stages):
+
+            # exit_v = v2
+            self.U_mean()
+            self.Radius_mean()
             exit_v = self.v_abs_exit(self.U_meanline)
+            axial_v = self.axial_outlet_velocity(exit_v)
             last_temp = self.stage_temperatures[-1]
             mach = self.Mach(last_temp, exit_v)
             next_temp = last_temp * self.T_ratio(mach)
             self.stage_temperatures.append(next_temp)
             last_pres = self.stage_pressures[-1]
-            stage_efficiency = self.stage_eff(exit_v)
+            # stage_efficiency = self.stage_eff(exit_v)
+            stage_efficiency = 0.985
             next_pres = last_pres * self.p_ratio(next_temp/last_temp, stage_efficiency)
 
             self.stage_pressures.append(next_pres)
 
+            next_density = next_pres / (next_temp * self.R)
+            self.stage_densities.append(next_density)
+            blade_length = self.blade_length(next_density,axial_v)
+            tip_radius = self.tip_radius(blade_length)
+            self.tip_radii.append(tip_radius)
 
+            tip_speed = self.Omega*tip_radius
+            print('tip speed at stage', i, '=', '%.2f' % tip_speed)
+            print('pressure ratio for stage', i, '=', '%.2f' % (next_pres/last_pres))
+            if tip_speed > 450:
+                print("the speed limit is reached in stage ", i)
 
+        print('opr =', (self.stage_pressures[-1]/self.stage_pressures[0]))
+    # --- QUESTIONS ---
 
+    # - (can we assume) does the axial velocity component remain constant throughout the entire compressor?
+    # - should we match compressor with turbine and nozzle?
+    # - what is stage total to total efficiency?
+    # - pressure ratio from temp ratio
+
+viper_compressor = compressor()
+viper_compressor.stage_loop()
 
 
 
