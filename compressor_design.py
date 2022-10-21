@@ -50,7 +50,9 @@ class compressor():
         3. compute the U_mean by using specific work and work coeff (U_mean = sqrt(specific_work/work_coeff))
         4. compute R_mean using U_mean and Omega (R_mean = U_mean/Omega)
         5. (velocity traingles)
-        6. Compute Tt_i+1/Tt_i and after that the pressure ratio per stage, using the isentropic total to total efficiency
+        6a. Compute Tt_i+1/Tt_i and after that the pressure ratio per stage, using the polytropic efficiency = 0.92 from the plot, formula from reader
+        6b. Use the over all p_ratio and T_ratio to find isentropic efficiency
+        6c. update the total compressor power
         7. set up continuity equation for the first stage
         8. determine the A using the continuity equation
         9. Determine R_tip (the blade height) per stage (R_tip differs per stage due to varying density)
@@ -139,9 +141,15 @@ class compressor():
     # --- QUESTIONS ---
 
     # - (can we assume) does the axial velocity component remain constant throughout the entire compressor?
+    # yes - for constant mean radius and repeated stage it is a valid assumption
     # - should we match compressor with turbine and nozzle?
+    #  no really
     # - what is stage total to total efficiency?
+    # use
     # - pressure ratio from temp ratio
+
+
+
 
 viper_compressor = compressor()
 viper_compressor.stage_loop()
