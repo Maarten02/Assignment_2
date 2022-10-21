@@ -13,8 +13,8 @@ class compressor():
         self.inlet_density = self.inlet_pressure / (self.R * self.inlet_temperature)
 
         self.n_stages = 7
-        self.phi_stage = 0.4
-        self.psi_stage = 0.7
+        self.phi_stage = 0.7
+        self.psi_stage = 0.4
         self.deg_of_reaction_stage = 0.5
 
         self.stage_areas = []
@@ -94,6 +94,9 @@ class compressor():
 
     def tip_radius(self, blade_length):
         return self.mean_radius + blade_length*0.5
+
+    def axial_outlet_velocity(self, v_exit):
+        return v_exit*np.cos(self.alpha_2)
 
     def stage_loop(self):
 
