@@ -16,6 +16,8 @@ class viper():
         self.m_dot_f = 0.4267       # [kg/s]
         self.T_0 = 288              # [K]
         self.p_0 = 100000           # [Pa]
+        self.p_ref = 100000         # [Pa]
+        self.T_ref = 288            # [K]
         self.tur_eff = 0.8          # [-]
         self.comp_eff = 0.887015092        # [-]
         self.comb_eff = 1           # [-]

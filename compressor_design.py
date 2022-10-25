@@ -26,7 +26,7 @@ class compressor():
         self.mean_radius = None
         self.stage_efficiency = None
 
-        self.compressor_power = 2512166.60      # [W], from main.py
+        self.compressor_power = 1972157.25       # [W], from main.py, it1: 2512166.60 it2:1928808.35
         self.Omega = 10000 * 2 * math.pi / 60   # [rad/s]
         self.work_per_stage = self.compressor_power / self.n_stages
 
@@ -34,7 +34,7 @@ class compressor():
         self.U_meanline = None
 
 
-        self.m_dot_air = 12.6534 # [kg/s]
+        self.m_dot_air = 11.296349349453173 # [kg/s] it1:12.6534 it2: 11.20978 (0.92 efficiency poly)
         self.spec_work_stage = self.work_per_stage / self.m_dot_air
 
         self.alpha_1 = math.radians(23.2)
@@ -166,6 +166,7 @@ class compressor():
 
 viper_compressor = compressor()
 viper_compressor.stage_loop()
+viper_compressor.power_loop()
 
 
 
