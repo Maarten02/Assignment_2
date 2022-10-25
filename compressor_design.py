@@ -10,7 +10,7 @@ class compressor():
         self.inlet_temperature = 246.77
         self.inlet_density = self.inlet_pressure / (self.R * self.inlet_temperature)
 
-        self.n_stages = 7
+        self.n_stages = 4
         self.phi_stage = 0.7
         self.psi_stage = 0.4
         self.deg_of_reaction_stage = 0.5
@@ -79,8 +79,10 @@ class compressor():
     def isen_eff(self, T_ratio, p_ratio):
          return (p_ratio ** ((self.k - 1) / self.k) - 1) / (T_ratio - 1)
 
-    def T_ratio(self, M):
-        return 1 + M**2*(self.k-1)*self.psi_stage
+    def T_ratio(self, t_last):
+        delta_t = self.spec_work_stage / 1000
+        t_new = t_last + delta_t
+        return t_new / t_last
 
     def p_ratio(self, T_ratio):
         return (T_ratio) ** ((self.k * self.stage_efficiency) / (self.k - 1))
@@ -114,8 +116,7 @@ class compressor():
             exit_v = self.v_abs_exit(self.U_meanline)
             axial_v = self.axial_outlet_velocity(exit_v)
             last_temp = self.stage_temperatures[-1]
-            mach = self.Mach(last_temp, exit_v)
-            next_temp = last_temp * self.T_ratio(mach)
+            next_temp = last_temp * self.T_ratio(last_temp)
             self.stage_temperatures.append(next_temp)
             last_pres = self.stage_pressures[-1]
             # stage_efficiency = self.stage_eff(exit_v)
