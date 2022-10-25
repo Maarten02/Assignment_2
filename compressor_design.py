@@ -6,8 +6,6 @@ class compressor():
     def __init__(self):
         self.k = 1.4 # [-]
         self.R = 287 # [J/kg*K]
-        self.stages = []
-        self.overall_pressure_ratio = 5.5
         self.inlet_pressure = 36678.87
         self.inlet_temperature = 246.77
         self.inlet_density = self.inlet_pressure / (self.R * self.inlet_temperature)
@@ -26,6 +24,7 @@ class compressor():
         self.hub_radii = []
         self.tip_radii = []
         self.mean_radius = None
+        self.stage_efficiency = None
 
         self.compressor_power = 2512166.60      # [W], from main.py
         self.Omega = 10000 * 2 * math.pi / 60   # [rad/s]
@@ -77,20 +76,20 @@ class compressor():
     def Mach(self, T, abs_velocity):
         return abs_velocity/np.sqrt(T*self.k*self.R)
 
-    def stage_eff(self, v):
-        return 1/(1+ (v**2/(2*self.spec_work_stage)))
+    def isen_eff(self, T_ratio, p_ratio):
+         return (p_ratio ** ((self.k - 1) / self.k) - 1) / (T_ratio - 1)
 
     def T_ratio(self, M):
         return 1 + M**2*(self.k-1)*self.psi_stage
 
-    def p_ratio(self, T_ratio, stage_eff):
-        return (1 + stage_eff*(T_ratio-1))**(self.k / (self.k-1))
+    def p_ratio(self, T_ratio):
+        return (T_ratio) ** ((self.k * self.stage_efficiency) / (self.k - 1))
 
     def density(self, pressure, temperature):
-        return pressure / (self.R* temperature)
+        return pressure / (self.R * temperature)
 
     def blade_length(self, density, abs_velocity):
-        '''assumption: velocity at mean radius is the mean velocity along the entire blade'''
+        ''' assumption: velocity at mean radius is the mean velocity along the entire blade '''
         area = self.m_dot_air/(density*abs_velocity)
         return area/(2*np.pi*self.mean_radius)
 
@@ -120,8 +119,8 @@ class compressor():
             self.stage_temperatures.append(next_temp)
             last_pres = self.stage_pressures[-1]
             # stage_efficiency = self.stage_eff(exit_v)
-            stage_efficiency = 0.985
-            next_pres = last_pres * self.p_ratio(next_temp/last_temp, stage_efficiency)
+            self.stage_efficiency = 0.91
+            next_pres = last_pres * self.p_ratio(next_temp/last_temp)
 
             self.stage_pressures.append(next_pres)
 
@@ -138,6 +137,20 @@ class compressor():
                 print("the speed limit is reached in stage ", i)
 
         print('opr =', (self.stage_pressures[-1]/self.stage_pressures[0]))
+        print('otr =', (self.stage_temperatures[-1]/self.stage_temperatures[0]))
+
+    def power_loop(self):
+        # determine isentropic efficiency
+        T_ratio = self.stage_temperatures[-1] / self.stage_temperatures[0]
+        p_ratio = self.stage_pressures[-1] / self.stage_pressures[0]
+        isen_eff = self.isen_eff(T_ratio, p_ratio)
+        print('isentropic efficiency = %.9f' % isen_eff)
+        # update compressor power using new found isentropic efficiency
+
+
+
+
+
     # --- QUESTIONS ---
 
     # - (can we assume) does the axial velocity component remain constant throughout the entire compressor?

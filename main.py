@@ -17,7 +17,7 @@ class viper():
         self.T_0 = 288              # [K]
         self.p_0 = 100000           # [Pa]
         self.tur_eff = 0.8          # [-]
-        self.comp_eff = 0.78       # [-]
+        self.comp_eff = 0.887015092        # [-]
         self.comb_eff = 1           # [-]
         self.nozz_eff = 1           # [-]
         self.cp_a = 1000            # [J/kg*K]
@@ -217,9 +217,9 @@ units1 = ['-', 'N']
 engine1.printing(names1, values1, units1)
 
 
-names3 = ['exit massflow', 'gross thrust', 'fuel massflow', 'inlet total pressure', 'inlet total temperature', 'compressor work']
-values3 = [engine3.m_dot_4, engine3.gross_thrust, engine3.m_dot_f, engine3.pt_2, engine3.Tt_2, (engine3.Tt_3-engine3.Tt_2)*engine3.cp_a*engine3.m_dot_air]
-units3 = ['kg/s', 'N', 'kg/s', 'Pa', 'K', 'w']
+names3 = ['exit massflow', 'gross thrust', 'fuel massflow', 'inlet total pressure', 'inlet total temperature', 'compressor work', 'temp ratio']
+values3 = [engine3.m_dot_4, engine3.gross_thrust, engine3.m_dot_f, engine3.pt_2, engine3.Tt_2, (engine3.Tt_3-engine3.Tt_2)*engine3.cp_a*engine3.m_dot_air, engine3.Tt_3/engine3.Tt_2]
+units3 = ['kg/s', 'N', 'kg/s', 'Pa', 'K', 'w', '-']
 
 
 engine3.printing(names3, values3, units3)
