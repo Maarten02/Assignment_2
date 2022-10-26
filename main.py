@@ -19,7 +19,7 @@ class viper():
         self.p_ref = 100000         # [Pa]
         self.T_ref = 288            # [K]
         self.tur_eff = 0.8          # [-]
-        self.comp_eff = 0.887015092        # [-]
+        self.comp_eff = 0.886530850       # [-]
         self.comb_eff = 1           # [-]
         self.nozz_eff = 1           # [-]
         self.cp_a = 1000            # [J/kg*K]
@@ -132,7 +132,7 @@ class viper():
     def printing(self, names, values, units):
         print('\n--- results for engine', self.engine_ID, '---')
         for value, name, unit in zip(values, names, units):
-            print(name,' = ',  '%.2f' % value, ' [', unit, ']')
+            print(name,' = ',  '%.6f' % value, ' [', unit, ']')
 
         if self.choked:
             print('this engine is choked')
@@ -213,9 +213,9 @@ for iteration in range(10):
         engine3.cruise = False
 
 #--------------- printing results ------------------
-names1 = ['turbine to nozzle area ratio', 'gross thrust']
-values1 = [engine1.A_t/engine1.nozzle_area, engine1.gross_thrust]
-units1 = ['-', 'N']
+names1 = ['turbine to nozzle area ratio', 'gross thrust', 'TIT']
+values1 = [engine1.A_t/engine1.nozzle_area, engine1.gross_thrust, engine1.Tt_4]
+units1 = ['-', 'N', 'K']
 engine1.printing(names1, values1, units1)
 
 

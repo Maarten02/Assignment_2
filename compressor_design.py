@@ -26,15 +26,15 @@ class compressor():
         self.mean_radius = None
         self.stage_efficiency = None
 
-        self.compressor_power = 1972157.25       # [W], from main.py, it1: 2512166.60 it2:1928808.35
-        self.Omega = 10000 * 2 * math.pi / 60   # [rad/s]
+        self.compressor_power = 1973832.940054       # [W], from main.py, it1: 2512166.60 it2:1928808.35
+        self.Omega = 20000 * 2 * math.pi / 60   # [rad/s]
         self.work_per_stage = self.compressor_power / self.n_stages
 
 
         self.U_meanline = None
 
 
-        self.m_dot_air = 11.296349349453173 # [kg/s] it1:12.6534 it2: 11.20978 (0.92 efficiency poly)
+        self.m_dot_air = 11.299775384849212 # [kg/s] it1:12.6534 it2: 11.20978 (0.92 efficiency poly)
         self.spec_work_stage = self.work_per_stage / self.m_dot_air
 
         self.alpha_1 = math.radians(23.2)
@@ -127,16 +127,20 @@ class compressor():
 
             next_density = next_pres / (next_temp * self.R)
             self.stage_densities.append(next_density)
-            blade_length = self.blade_length(next_density,axial_v)
+            inter_stage_density = 0.5 * (next_density + last_density)
+            blade_length = self.blade_length(inter_stage_density, axial_v)
             tip_radius = self.tip_radius(blade_length)
             self.tip_radii.append(tip_radius)
 
             tip_speed = self.Omega*tip_radius
-            print('tip speed at stage', i, '=', '%.2f' % tip_speed)
+            print('tip speed at stage', i, '=', '%.2f' % tip_speed, '[m/s]')
             print('pressure ratio for stage', i, '=', '%.2f' % (next_pres/last_pres))
+            print('blade length = %.4f' % blade_length, '[m]')
+            print('tip radius = %.4f' % tip_radius, '[m]')
+            print('mean radius = %.4f' % self.mean_radius, '[m]')
             if tip_speed > 450:
                 print("the speed limit is reached in stage ", i)
-
+            print('---------------------------------')
         print('opr =', (self.stage_pressures[-1]/self.stage_pressures[0]))
         print('otr =', (self.stage_temperatures[-1]/self.stage_temperatures[0]))
 
