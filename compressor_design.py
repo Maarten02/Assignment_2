@@ -1,6 +1,7 @@
 import numpy as np
 import math
-
+from matplotlib import pyplot as plt
+import pyromat as pm
 
 class compressor():
     def __init__(self):
@@ -17,7 +18,10 @@ class compressor():
 
         self.stage_areas = []
         self.stage_pressures = []
+        self.stage_pressure_ratios = []
+        self.stage_pressures_static = []
         self.stage_temperatures = []
+        self.stage_temperatures_static = []
         self.stage_densities = []
         self.velocities = []
 
@@ -27,7 +31,7 @@ class compressor():
         self.stage_efficiency = None
 
         self.compressor_power = 1973832.940054       # [W], from main.py, it1: 2512166.60 it2:1928808.35
-        self.Omega = 20000 * 2 * math.pi / 60   # [rad/s]
+        self.Omega = 10000 * 2 * math.pi / 60   # [rad/s]
         self.work_per_stage = self.compressor_power / self.n_stages
 
 
@@ -101,12 +105,20 @@ class compressor():
     def axial_outlet_velocity(self, v_exit):
         return v_exit*np.cos(self.alpha_2)
 
+    def total_temp_to_static(self, T_t, v):
+        return T_t - (v**2/(2*1000))
+
+    def total_pressure_to_static(self, T_s, T_t, p_t):
+        return p_t*((T_t/T_s)**((self.k-1)/self.k))
+
     def stage_loop(self):
 
         self.stage_temperatures.append(self.inlet_temperature)
         self.stage_pressures.append(self.inlet_pressure)
         self.stage_densities.append(self.inlet_density)
-
+        self.stage_pressures_static.append(self.inlet_static_pressure)
+        self.stage_temperatures_static.append(self.inlet_static_temperature)
+        self.stage_efficiency = 0.91
 
         for i in range(self.n_stages):
 
@@ -133,7 +145,12 @@ class compressor():
             tip_radius = self.tip_radius(blade_length)
             self.tip_radii.append(tip_radius)
 
-            tip_speed = self.Omega*tip_radius
+            tip_speed_1 = self.Omega * tip_radius_1
+            tip_speed_2 = self.Omega * tip_radius_2
+            tip_speed_3 = self.Omega * tip_radius_3
+
+
+            self.stage_pressure_ratios.append(next_pres/last_pres)
             print('tip speed at stage', i, '=', '%.2f' % tip_speed, '[m/s]')
             print('pressure ratio for stage', i, '=', '%.2f' % (next_pres/last_pres))
             print('blade length = %.4f' % blade_length, '[m]')
@@ -173,6 +190,34 @@ class compressor():
 viper_compressor = compressor()
 viper_compressor.stage_loop()
 viper_compressor.power_loop()
+
+print(viper_compressor.stage_pressure_ratios)
+
+
+
+n_stages = list(range(1,viper_compressor.n_stages+1))
+print(n_stages)
+plt.figure(1)
+plt.plot(n_stages,viper_compressor.stage_pressure_ratios, marker = '.')
+plt.title("Flow properties along Gas Path")
+plt.xlabel('Stages')
+plt.ylabel(r'Pressure Ratio, $\beta_{stage}$')
+plt.grid()
+
+air = pm.get('ig.air')
+enthalpy_stage = air.h(T = viper_compressor.stage_temperatures)
+entropy_stage = air.s(T=viper_compressor.stage_temperatures, p= viper_compressor.stage_pressures)
+
+plt.figure(2)
+plt.plot(entropy_stage,enthalpy_stage, marker = '.')
+for i in range(viper_compressor.n_stages):
+    plt.plot(air.s(T=viper_compressor.stage_temperatures, p= viper_compressor.stage_pressures[i]), air.h(T = viper_compressor.stage_temperatures))
+plt.title("h-s diagram")
+plt.xlabel(r'Entropy, $s$')
+plt.ylabel(r'Enthalpy, $h$')
+plt.grid()
+plt.show()
+
 
 
 
