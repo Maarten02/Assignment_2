@@ -7,8 +7,10 @@ class compressor():
     def __init__(self):
         self.k = 1.4 # [-]
         self.R = 287 # [J/kg*K]
-        self.inlet_pressure = 36678.87
-        self.inlet_temperature = 246.77
+        self.inlet_pressure = 36678.87 # [pa]
+        self.inlet_temperature = 246.77 # [K]
+        self.inlet_static_pressure = 0.2454 * 10 ** 5 # [pa]
+        self.inlet_static_temperature = 220 [K]
         self.inlet_density = self.inlet_pressure / (self.R * self.inlet_temperature)
 
         self.n_stages = 5
@@ -122,28 +124,48 @@ class compressor():
 
         for i in range(self.n_stages):
 
-            # exit_v = v2
+            # here the meanline velocity, radius, abs and axial velocity are calculated
             self.U_mean()
             self.Radius_mean()
-            exit_v = self.v_abs_exit(self.U_meanline)
+            exit_v = self.v_abs_exit(self.U_meanline)       # exit_v = v2
             axial_v = self.axial_outlet_velocity(exit_v)
-            last_temp = self.stage_temperatures[-1]
-            next_temp = last_temp * self.T_ratio(last_temp)
-            self.stage_temperatures.append(next_temp)
-            last_pres = self.stage_pressures[-1]
-            # stage_efficiency = self.stage_eff(exit_v)
-            self.stage_efficiency = 0.91
-            next_pres = last_pres * self.p_ratio(next_temp/last_temp)
+            #axial v van 1 en 3 bepalen
+            # total temp across a stage
+            total_temp_1 = self.stage_temperatures[-1]
+            total_temp_3 = total_temp_1 * self.T_ratio(total_temp_1)
+            self.stage_temperatures.append(total_temp_3)
 
-            self.stage_pressures.append(next_pres)
-            last_density = last_pres/(last_temp*self.R)
+            # total pres across a stage
+            total_pres_1 = self.stage_pressures[-1]
+            total_pres_3 = total_pres_1 * self.p_ratio(total_temp_3/total_temp_1)
+            self.stage_pressures.append(total_pres_3)
 
-            next_density = next_pres / (next_temp * self.R)
-            self.stage_densities.append(next_density)
-            inter_stage_density = 0.5 * (next_density + last_density)
-            blade_length = self.blade_length(inter_stage_density, axial_v)
-            tip_radius = self.tip_radius(blade_length)
-            self.tip_radii.append(tip_radius)
+            # static temp across a stage
+            static_temp_1 = self.stage_temperatures_static[-1]
+            static_temp_2 = self.total_temp_to_static(total_temp_1, exit_v)
+            static_temp_3 = static_temp_1 + (total_temp_3 - total_temp_1)
+            self.stage_temperatures_static.extend([static_temp_2, static_temp_3])
+
+            # static pres across a stage
+            static_pres_1 = self.stage_pressures_static[-1]
+            static_pres_2 = self.total_pressure_to_static(static_temp_2, total_temp_3, total_pres_3)
+            static_pres_3 = static_temp_1 + (total_temp_3 - total_temp_1)
+            self.stage_pressures_static.extend([static_pres_2, static_pres_3])
+
+            # below is not correct
+            density_1 = static_pres_1 / (static_temp_1 * self.R)
+            density_2 = static_pres_2 / (static_temp_2 * self.R)
+            density_3 = static_pres_3 / (static_temp_3 * self.R)
+
+            # self.stage_densities.extend(density_2, density_3)
+
+            blade_length_1 = self.blade_length(density_1, axial_v_1)
+            blade_length_2 = self.blade_length(density_2, axial_v_2)
+            blade_length_3 = self.blade_length(density_3, axial_v_3)
+            tip_radius_1 = self.tip_radius(blade_length_1)
+            tip_radius_2 = self.tip_radius(blade_length_2)
+            tip_radius_3 = self.tip_radius(blade_length_3)
+            self.tip_radii.extend([tip_radius_1, tip_radius_2, tip_radius_3])
 
             tip_speed_1 = self.Omega * tip_radius_1
             tip_speed_2 = self.Omega * tip_radius_2
