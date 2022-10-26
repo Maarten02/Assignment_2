@@ -10,7 +10,7 @@ class compressor():
         self.inlet_temperature = 246.77
         self.inlet_density = self.inlet_pressure / (self.R * self.inlet_temperature)
 
-        self.n_stages = 4
+        self.n_stages = 5
         self.phi_stage = 0.7
         self.psi_stage = 0.4
         self.deg_of_reaction_stage = 0.5
@@ -124,6 +124,7 @@ class compressor():
             next_pres = last_pres * self.p_ratio(next_temp/last_temp)
 
             self.stage_pressures.append(next_pres)
+            last_density = last_pres/(last_temp*self.R)
 
             next_density = next_pres / (next_temp * self.R)
             self.stage_densities.append(next_density)
