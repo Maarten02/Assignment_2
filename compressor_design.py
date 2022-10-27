@@ -9,8 +9,9 @@ class compressor():
         self.R = 287 # [J/kg*K]
         self.inlet_pressure = 36678.87 # [pa]
         self.inlet_temperature = 246.77 # [K]
-        self.inlet_static_pressure = 0.2454 * 10 ** 5 # [pa]
-        self.inlet_static_temperature = 220 [K]
+        self.inlet_static_pressure = None
+        self.inlet_static_temperature = None
+
         self.inlet_density = self.inlet_pressure / (self.R * self.inlet_temperature)
 
         self.n_stages = 5
@@ -115,6 +116,9 @@ class compressor():
 
     def stage_loop(self):
 
+
+        self.inlet_static_temperature = self.total_temp_to_static(self.inlet_temperature, 225.046)  # [K]
+        self.inlet_static_pressure = self.total_pressure_to_static(self.inlet_static_temperature, self.inlet_temperature, self.inlet_pressure)  # [pa]
         self.stage_temperatures.append(self.inlet_temperature)
         self.stage_pressures.append(self.inlet_pressure)
         self.stage_densities.append(self.inlet_density)
@@ -129,6 +133,7 @@ class compressor():
             self.Radius_mean()
             exit_v = self.v_abs_exit(self.U_meanline)       # exit_v = v2
             axial_v = self.axial_outlet_velocity(exit_v)
+
             #axial v van 1 en 3 bepalen
             # total temp across a stage
             total_temp_1 = self.stage_temperatures[-1]
@@ -147,6 +152,8 @@ class compressor():
             self.stage_temperatures_static.extend([static_temp_2, static_temp_3])
 
             # static pres across a stage
+            mach_2 = self.Mach(static_temp_2,exit_v)
+            static_pres_2_test = total_pres_3/ ((1+((self.k-1)/2)*mach_2**2)**(self.k/(self.k-1)))
             static_pres_1 = self.stage_pressures_static[-1]
             static_pres_2 = self.total_pressure_to_static(static_temp_2, total_temp_3, total_pres_3)
             static_pres_3 = static_temp_1 + (total_temp_3 - total_temp_1)
@@ -178,7 +185,7 @@ class compressor():
             print('blade length = %.4f' % blade_length, '[m]')
             print('tip radius = %.4f' % tip_radius, '[m]')
             print('mean radius = %.4f' % self.mean_radius, '[m]')
-            if tip_speed > 450:
+            if tip_speed_1 > 450:
                 print("the speed limit is reached in stage ", i)
             print('---------------------------------')
         print('opr =', (self.stage_pressures[-1]/self.stage_pressures[0]))
