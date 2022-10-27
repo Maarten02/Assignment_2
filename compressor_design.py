@@ -80,6 +80,7 @@ class compressor():
     def v_abs_exit(self, U):
         return U / (np.sin(self.alpha_2)-np.cos(self.alpha_2)*np.tan(self.beta_2))
 
+
     def Mach(self, T, abs_velocity):
         return abs_velocity/np.sqrt(T*self.k*self.R)
 
@@ -147,7 +148,7 @@ class compressor():
 
             # static temp across a stage
             static_temp_1 = self.stage_temperatures_static[-1]
-            static_temp_2 = self.total_temp_to_static(total_temp_1, exit_v)
+            static_temp_2 = self.total_temp_to_static(total_temp_3, exit_v)
             static_temp_3 = static_temp_1 + (total_temp_3 - total_temp_1)
             self.stage_temperatures_static.extend([static_temp_2, static_temp_3])
 
@@ -156,7 +157,7 @@ class compressor():
             static_pres_2_test = total_pres_3/ ((1+((self.k-1)/2)*mach_2**2)**(self.k/(self.k-1)))
             static_pres_1 = self.stage_pressures_static[-1]
             static_pres_2 = self.total_pressure_to_static(static_temp_2, total_temp_3, total_pres_3)
-            static_pres_3 = static_temp_1 + (total_temp_3 - total_temp_1)
+            static_pres_3 = self.total_pressure_to_static(static_temp_3, total_temp_3, total_pres_3)
             self.stage_pressures_static.extend([static_pres_2, static_pres_3])
 
             # below is not correct
@@ -166,9 +167,9 @@ class compressor():
 
             # self.stage_densities.extend(density_2, density_3)
 
-            blade_length_1 = self.blade_length(density_1, axial_v_1)
-            blade_length_2 = self.blade_length(density_2, axial_v_2)
-            blade_length_3 = self.blade_length(density_3, axial_v_3)
+            blade_length_1 = self.blade_length(density_1, axial_v)
+            blade_length_2 = self.blade_length(density_2, axial_v)
+            blade_length_3 = self.blade_length(density_3, axial_v)
             tip_radius_1 = self.tip_radius(blade_length_1)
             tip_radius_2 = self.tip_radius(blade_length_2)
             tip_radius_3 = self.tip_radius(blade_length_3)
@@ -179,11 +180,16 @@ class compressor():
             tip_speed_3 = self.Omega * tip_radius_3
 
 
-            self.stage_pressure_ratios.append(next_pres/last_pres)
-            print('tip speed at stage', i, '=', '%.2f' % tip_speed, '[m/s]')
-            print('pressure ratio for stage', i, '=', '%.2f' % (next_pres/last_pres))
-            print('blade length = %.4f' % blade_length, '[m]')
-            print('tip radius = %.4f' % tip_radius, '[m]')
+            self.stage_pressure_ratios.append(total_pres_3/total_pres_1)
+            print('parameters for stage', i)
+            print('rotor tip speed = %.2f' % tip_speed_1, '[m/s]')
+            print('pressure ratio = %.2f' % (total_pres_3/total_pres_1))
+            print('blade length 1 = %.4f' % blade_length_1, '[m]')
+            print('blade length 2 = %.4f' % blade_length_2, '[m]')
+            print('blade length 3 = %.4f' % blade_length_3, '[m]')
+            print('tip radius 1 = %.4f' % tip_radius_1, '[m]')
+            print('tip radius 2 = %.4f' % tip_radius_2, '[m]')
+            print('tip radius 3 = %.4f' % tip_radius_3, '[m]')
             print('mean radius = %.4f' % self.mean_radius, '[m]')
             if tip_speed_1 > 450:
                 print("the speed limit is reached in stage ", i)
