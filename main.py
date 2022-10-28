@@ -1,4 +1,4 @@
-/
+
 import numpy as np
 
 
@@ -218,6 +218,7 @@ values1 = [engine1.A_t/engine1.nozzle_area, engine1.gross_thrust, engine1.Tt_4]
 units1 = ['-', 'N', 'K']
 engine1.printing(names1, values1, units1)
 
+engine2.printing(names1, values1, units1)
 
 names3 = ['exit massflow', 'gross thrust', 'fuel massflow', 'inlet total pressure', 'inlet total temperature', 'compressor work', 'temp ratio']
 values3 = [engine3.m_dot_4, engine3.gross_thrust, engine3.m_dot_f, engine3.pt_2, engine3.Tt_2, (engine3.Tt_3-engine3.Tt_2)*engine3.cp_a*engine3.m_dot_air, engine3.Tt_3/engine3.Tt_2]

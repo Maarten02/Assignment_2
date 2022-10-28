@@ -1,10 +1,12 @@
 import numpy as np
 import math
+import plotting
 from matplotlib import pyplot as plt
 import pyromat as pm
 
 class compressor():
     def __init__(self):
+        self.x_locs = None
         self.k = 1.4 # [-]
         self.R = 287 # [J/kg*K]
         self.inlet_pressure = 36678.87 # [pa]
@@ -32,6 +34,9 @@ class compressor():
         self.tip_radii = []
         self.mean_radius = None
         self.stage_efficiency = None
+        self.aspect_ratios = [1.5, 1.4, 1.3, 1.2, 1.1]
+        self.blade_widths = []
+
 
         self.compressor_power = 1973832.940054       # [W], from main.py, it1: 2512166.60 it2:1928808.35
         self.Omega = 10000 * 2 * math.pi / 60   # [rad/s]
@@ -173,6 +178,10 @@ class compressor():
             tip_radius_1 = self.tip_radius(blade_length_1)
             tip_radius_2 = self.tip_radius(blade_length_2)
             tip_radius_3 = self.tip_radius(blade_length_3)
+            width_rotor = 0.5*(blade_length_1 + blade_length_2) / self.aspect_ratios[i]
+            width_stator = 0.5*(blade_length_2 + blade_length_3) / self.aspect_ratios[i]
+
+            self.blade_widths.extend([width_rotor, width_stator])
             self.tip_radii.extend([tip_radius_1, tip_radius_2, tip_radius_3])
 
             tip_speed_1 = self.Omega * tip_radius_1
@@ -196,6 +205,18 @@ class compressor():
             print('---------------------------------')
         print('opr =', (self.stage_pressures[-1]/self.stage_pressures[0]))
         print('otr =', (self.stage_temperatures[-1]/self.stage_temperatures[0]))
+
+        # generate x_locs
+        space = 0.01
+        self.x_locs = [0]
+        for width in self.blade_widths:
+            le = self.x_locs[-1]
+            te = le + width
+            self.x_locs.extend([te, te + space])
+
+
+
+        self.x_locs = self.x_locs[:-1]
 
     def power_loop(self):
         # determine isentropic efficiency
@@ -221,37 +242,30 @@ class compressor():
 
 
 
-
 viper_compressor = compressor()
 viper_compressor.stage_loop()
 viper_compressor.power_loop()
 
-print(viper_compressor.stage_pressure_ratios)
+n_stages_list = range(1, viper_compressor.n_stages+1)
+n_stages = viper_compressor.n_stages
+x_locs = viper_compressor.x_locs
+p_ratios = viper_compressor.stage_pressure_ratios
+plotting.plot_pressure_ratios(p_ratios, n_stages_list)
+plotting.plot_static_pres_over_total(viper_compressor.stage_pressures_static, viper_compressor.stage_pressures[0], n_stages)
+plotting.plot_static_temp_over_total(viper_compressor.stage_temperatures_static, viper_compressor.stage_temperatures[0], n_stages)
+plotting.plot_total_pres_over_total(viper_compressor.stage_pressures, viper_compressor.stage_pressures[0],n_stages)
+plotting.plot_total_temp_over_total(viper_compressor.stage_temperatures, viper_compressor.stage_temperatures[0],n_stages)
+plotting.plot_h_s_diagram(viper_compressor.stage_temperatures, viper_compressor.stage_pressures, n_stages)
+
+plot_radii = []
+for i in range(len(viper_compressor.tip_radii)):
+    plot_radii.append([viper_compressor.tip_radii[i], viper_compressor.hub_radii[i]])
+
+plotting.plot_mgas_path(n_stages, plot_radii, viper_compressor.x_locs)
+print(x_locs)
 
 
 
-n_stages = list(range(1,viper_compressor.n_stages+1))
-print(n_stages)
-plt.figure(1)
-plt.plot(n_stages,viper_compressor.stage_pressure_ratios, marker = '.')
-plt.title("Flow properties along Gas Path")
-plt.xlabel('Stages')
-plt.ylabel(r'Pressure Ratio, $\beta_{stage}$')
-plt.grid()
-
-air = pm.get('ig.air')
-enthalpy_stage = air.h(T = viper_compressor.stage_temperatures)
-entropy_stage = air.s(T=viper_compressor.stage_temperatures, p= viper_compressor.stage_pressures)
-
-plt.figure(2)
-plt.plot(entropy_stage,enthalpy_stage, marker = '.')
-for i in range(viper_compressor.n_stages):
-    plt.plot(air.s(T=viper_compressor.stage_temperatures, p= viper_compressor.stage_pressures[i]), air.h(T = viper_compressor.stage_temperatures))
-plt.title("h-s diagram")
-plt.xlabel(r'Entropy, $s$')
-plt.ylabel(r'Enthalpy, $h$')
-plt.grid()
-plt.show()
 
 
 
