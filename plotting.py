@@ -7,9 +7,11 @@ import pyromat as pm
 def plot_mgas_path(stages, radii, x_locs):
 
     plt.figure()
-    plt.ylim([-1,1])
+    #plt.ylim([-1,1])
     plt.xlabel('axial length [m]')
     plt.ylabel('radius [m]')
+    plt.grid()
+    plt.title('Meridional Gas Path')
 
     fmts = ['r.-', 'b.-']
 
@@ -28,10 +30,10 @@ def plot_mgas_path(stages, radii, x_locs):
             y_te = radii[yid[1]]
 
             # plot rotor (red) or stator (blue)
-            plt.vlines(x_le, -1*y_le, y_le, colors=fmt[:-2])
-            plt.vlines(x_te, -1*y_te, y_te, colors=fmt[:-2])
-            plt.plot([x_le, x_te],[y_le, y_te], fmt)
-            plt.plot([x_le, x_te],[-y_le, -y_te], fmt)
+            plt.vlines(x_le, y_le[1], y_le[0], colors=fmt[:-2])
+            plt.vlines(x_te, y_te[1], y_te[0], colors=fmt[:-2])
+            plt.plot([x_le, x_te],[y_le[0], y_te[0]], fmt)
+            plt.plot([x_le, x_te],[y_le[1], y_te[1]], fmt)
 
     plt.savefig('figures/m_gas_path.pdf')
 
