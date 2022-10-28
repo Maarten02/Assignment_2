@@ -20,7 +20,6 @@ def plot_mgas_path(stages, radii, x_locs):
         xids = [[4 * i, 4 * i + 1], [4 * i + 2, 4 * i + 3]]
         yids = [[3 * i, 3 * i + 1], [3 * i + 1, 3 * i + 2]]
 
-
         for fmt, xid, yid in zip(fmts, xids, yids):
 
             # [[inner, outer], [inner, outer]]
@@ -168,8 +167,9 @@ def plot_total_temp_over_total(inter_total_temp, first_total_temp, n_stages):
 
 
 
-def plot_h_s_diagram(stage_temperatures, stage_pressures, n_stages):
+def plot_h_s_diagram(stage_temperatures_total, stage_pressures_total, stage_temperatures_static, stage_pressures_static, n_stages):
 
+    plt.figure()
     air = pm.get('ig.air')
 
     # enthalpy_stage = air.h(T=stage_temperatures)
@@ -218,5 +218,5 @@ def plot_h_s_diagram(stage_temperatures, stage_pressures, n_stages):
     plt.xlabel(r'Entropy, $s$')
     plt.ylabel(r'Enthalpy, $h$')
     plt.grid()
-    plt.show()
     plt.savefig('figures/h_s_diagram.pdf')
+    plt.show()

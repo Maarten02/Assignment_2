@@ -118,7 +118,7 @@ class compressor():
         return T_t - (v**2/(2*1000))
 
     def total_pressure_to_static(self, T_s, T_t, p_t):
-        return p_t*((T_t/T_s)**((self.k-1)/self.k))
+        return p_t/((T_t/T_s)**(self.k/(self.k-1)))
 
     def stage_loop(self):
 
