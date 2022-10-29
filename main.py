@@ -18,7 +18,7 @@ class viper():
         self.p_ref = 100000         # [Pa]
         self.T_ref = 288            # [K]
         self.tur_eff = 0.8          # [-]
-        self.comp_eff = 0.886530620       # [-]
+        self.comp_eff =  0.886530619       # [-]
         self.comb_eff = 1           # [-]
         self.nozz_eff = 1           # [-]
         self.cp_a = 1000            # [J/kg*K]

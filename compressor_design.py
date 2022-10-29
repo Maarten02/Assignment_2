@@ -38,7 +38,7 @@ class compressor():
         self.blade_widths = []
 
 
-        self.compressor_power = 1973832.940054       # [W], from main.py, it1: 2512166.60 it2:1928808.35
+        self.compressor_power = 1715298.209967       # [W], from main.py, it1: 2512166.60 it2:1928808.35
         self.Omega = 10000 * 2 * math.pi / 60   # [rad/s]
         self.work_per_stage = self.compressor_power / self.n_stages
 
@@ -46,7 +46,7 @@ class compressor():
         self.U_meanline = None
 
 
-        self.m_dot_air = 11.299775384849212 # [kg/s] it1:12.6534 it2: 11.20978 (0.92 efficiency poly)
+        self.m_dot_air =  9.819716 # [kg/s] it1:12.6534 it2: 11.20978 (0.92 efficiency poly)
         self.spec_work_stage = self.work_per_stage / self.m_dot_air
 
         self.alpha_1 = math.radians(23.2)

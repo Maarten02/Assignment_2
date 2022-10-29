@@ -8,8 +8,8 @@ def plot_mgas_path(stages, radii, x_locs):
 
     plt.figure()
     #plt.ylim([-1,1])
-    plt.xlabel('axial length [m]')
-    plt.ylabel('radius [m]')
+    plt.xlabel('Axial length [m]')
+    plt.ylabel('Radius [m]')
     plt.grid()
     plt.title('Meridional Gas Path')
 
@@ -72,7 +72,7 @@ def plot_static_pres_over_total(inter_static_pres, first_total_pres, n_stages):
         plt.plot(x[p:p+3], static_total_ratio[i:i+3], marker='.')
         i += 2
         p += 3
-    plt.title("Flow properties along Gas Path")
+    plt.title(r"Flow properties along Gas Path, $\frac{P}{P_{t0}}$ ")
     plt.xlabel(r'Stages')
     plt.ylabel(r'$\frac{P}{P_{t0}}$')
     plt.grid()
@@ -98,7 +98,7 @@ def plot_static_temp_over_total(inter_static_temp, first_total_temp, n_stages):
         plt.plot(x[p:p+3], static_total_ratio[i:i+3], marker='.')
         i += 2
         p += 3
-    plt.title("Flow properties along Gas Path")
+    plt.title(r"Flow properties along Gas Path, $\frac{T}{T_{t0}}$ ")
     plt.xlabel(r'Stages')
     plt.ylabel(r'$\frac{T}{T_{t0}}$')
     plt.grid()
@@ -128,7 +128,7 @@ def plot_total_pres_over_total(inter_total_pres, first_total_pres, n_stages):
         plt.plot(x[p:p+3], y_plot, marker='.')
         i += 1
         p += 3
-    plt.title("Flow properties along Gas Path")
+    plt.title(r"Flow properties along Gas Path, $\frac{P_t}{P_{t0}}$ ")
     plt.xlabel(r'Stages')
     plt.ylabel(r'$\frac{P_t}{P_{t0}}$')
     plt.grid()
@@ -158,7 +158,7 @@ def plot_total_temp_over_total(inter_total_temp, first_total_temp, n_stages):
         plt.plot(x[p:p+3], y_plot, marker='.')
         i += 1
         p += 3
-    plt.title("Flow properties along Gas Path")
+    plt.title(r"Flow properties along Gas Path, $\frac{T_t}{T_{t0}}$ ")
     plt.xlabel(r'Stages')
     plt.ylabel(r'$\frac{T_t}{T_{t0}}$')
     plt.grid()
@@ -214,9 +214,9 @@ def plot_h_s_diagram(stage_temperatures_total, stage_pressures_total, stage_temp
         # enthalpy_stage = air.h(T=stage_temperatures)
         # entropy_stage = air.s(T=stage_temperatures, p=stage_pressures)
 
-    plt.title("h-s diagram")
-    plt.xlabel(r'Entropy, $s$')
-    plt.ylabel(r'Enthalpy, $h$')
+    plt.title("h-s Diagram")
+    plt.xlabel(r'Entropy, $s$, [$J/kg \cdot K$]')
+    plt.ylabel(r'Enthalpy, $h$, [$J/K$]')
     plt.grid()
     plt.savefig('figures/h_s_diagram.pdf')
     plt.show()
