@@ -7,7 +7,6 @@ class viper():
 
         # --- miscellaneaous parameters ---
         self.engine_ID = None
-        self.cruise = False
         self.A_t = None
         self.A_n = None
         self.pres_ratio = 5.5          # [-]
@@ -19,7 +18,7 @@ class viper():
         self.p_ref = 100000         # [Pa]
         self.T_ref = 288            # [K]
         self.tur_eff = 0.8          # [-]
-        self.comp_eff = 0.886530850       # [-]
+        self.comp_eff = 0.78       # [-]
         self.comb_eff = 1           # [-]
         self.nozz_eff = 1           # [-]
         self.cp_a = 1000            # [J/kg*K]
@@ -29,7 +28,7 @@ class viper():
         self.LHV = 43*10**6         # [J]
         self.mech_eff = 0.99        # [-]
         self.R = 287                # [J/kg*K]
-        self.nozzle_area = None     # [m^2]
+        self.A_n = None     # [m^2]
         self.gross_thrust = None    # [N]
 
         # --- station parameters ---
@@ -108,25 +107,30 @@ class viper():
             self.pt_8 = self.pt_5 / p_critical_ratio                         # Calculate nozzle pressure using expansion up to M=1
             self.Tt_8 = self.Tt_5 * (2 / (self.k_g + 1))                     # calculate nozzle temperature using expansion up to M=1
             self.v_8 = np.sqrt(self.k_g * self.R * self.Tt_8)                # calculate speed of sound in nozzle, equal to jet velocity
-            self.rho_8 = self.pt_8 / (self.R * self.Tt_8)                      # calculate density in the nozzle
-            if not self.cruise:
-                self.nozzle_area = self.m_dot_4 / (self.v_8 * self.rho_8)        # calculate nozzle area using continuity
+            self.rho_8 = self.pt_8 / (self.R * self.Tt_8)                    # calculate density in the nozzle
+
+            if self.engine_ID == 1:
+                self.A_n = self.m_dot_4 / (self.v_8 * self.rho_8)        # calculate nozzle area using continuity
+                self.A_t = self.A_n * (self.pt_5 / self.pt_4) ** ((2 * self.k_g - (self.k_g - 1)) / (2 * self.k_g))
+
             else:
-                self.m_dot_4 = self.nozzle_area * self.v_8 * self.rho_8
-            self.gross_thrust = self.m_dot_4 * self.v_8 + self.nozzle_area * (self.pt_8 - self.p_0)  # calculate gross thrust
+                self.m_dot_4 = self.A_n * self.v_8 * self.rho_8
+
+            self.gross_thrust = self.m_dot_4 * self.v_8 + self.A_n * (self.pt_8 - self.p_0)  # calculate gross thrust
 
         if not self.choked:
             self.pt_8 = self.p_0                                             # equate nozzle pressure to ambient pressure
             self.Tt_8 = self.Tt_5 - self.Tt_5 * self.nozz_eff * (1 - (self.pt_8 / self.pt_5) ** ((self.k_g-1) / self.k_g))    # calculate nozzle temperature based on expansion to P_ambient
             self.v_8 = np.sqrt(2 * self.cp_g * (self.Tt_5 - self.Tt_8))      # calculate jet velocity based on conservation of total enthalpy
             self.rho_8 = self.pt_8 / (self.R * self.Tt_8)                    # calculate density in the nozzle using ideal gas law
-            if not self.cruise:
-                self.nozzle_area = self.m_dot_4 / (self.v_8 * self.rho_8)        # calculate nozzle area using continuity
+            if self.engine_ID == 1:
+                self.A_n = self.m_dot_4 / (self.v_8 * self.rho_8)        # calculate nozzle area using continuity
+                self.A_t = self.A_n * (self.pt_5 / self.pt_4) ** ((2 * self.k_g - (self.k_g - 1)) / (2 * self.k_g))
+
             else:
-                self.m_dot_4 = self.nozzle_area * self.v_8 * self.rho_8
+                self.m_dot_4 = self.A_n * self.v_8 * self.rho_8
             self.gross_thrust = self.m_dot_4 * self.v_8                      # calculate gross thrust
 
-        self.A_t = self.nozzle_area * (self.pt_5 / self.pt_4) ** ((2 * self.k_g - (self.k_g - 1)) / (2 * self.k_g))
 
 
     def printing(self, names, values, units):
@@ -164,33 +168,49 @@ engine2 = viper()
 engine2.engine_ID = 2
 engine2.Tt_2 = engine2.T_0
 engine2.pt_2 = engine2.p_0
+engine2.cruise = True
 
 # calculate properties after compressor stage
-engine2.compressor()
+#engine2.compressor()
 
 # calculate properties after combustion stage
 engine2.Tt_4 = 900 # [K]
-engine2.m_fuel_rate()
+engine2.m_dot_4 = engine2.m_dot_air # dummy value for the airflow
+engine2.A_n = engine1.A_n
 
-engine2.temperature_turbine()
-engine2.pressure_turbine()
+# calculate properties after compressor stage
+for iteration in range(10):
+    print(engine2.m_dot_air)
+    engine2.compressor()
 
-# calculate conditions in nozzle
-engine2.nozzle()
+    # calculate properties after combustion stage
+    if iteration != 0:
+        engine2.m_fuel_rate()
+    else:
+        engine2.pt_4 = engine2.pt_3
 
-# -------------------- exercise 3 --------------------
+    engine2.temperature_turbine()
+    engine2.pressure_turbine()
+
+    # calculate conditions in nozzle
+    engine2.nozzle()
+    if iteration == 0:
+        engine2.m_dot_air = engine2.m_dot_4
+
+
+# -------------------- exercise 3a --------------------
 engine3 = viper()
 engine3.engine_ID = 3
 engine3.cruise = True
 
 engine3.p_0 = 0.2454 *10**5 # [Pa]
 engine3.T_0 = 220 # [K]
-engine3.pt_2 = engine3.p_0 * (1 + ((engine3.k_a - 1)/2)*0.78**2)**(engine3.k_a/(engine3.k_a-1))
-engine3.Tt_2 = engine3.T_0 * (1+ ((engine3.k_a - 1)/ 2)*0.78**2)
+engine3.pt_2 = engine3.p_0 * (1 + ((engine3.k_a - 1) / 2) * 0.78**2)**(engine3.k_a / (engine3.k_a-1))
+engine3.Tt_2 = engine3.T_0 * (1 + ((engine3.k_a - 1) / 2) * 0.78**2)
 
 engine3.Tt_4 = 1150  # [K]
-engine3.m_dot_4 = engine3.m_dot_air
-engine3.nozzle_area = engine2.nozzle_area
+engine3.m_dot_4 = engine3.m_dot_air # dummy value for the airflow
+engine3.A_n = engine2.A_n
 
 # calculate properties after compressor stage
 for iteration in range(10):
@@ -210,22 +230,61 @@ for iteration in range(10):
     engine3.nozzle()
     if iteration == 0:
         engine3.m_dot_air = engine3.m_dot_4
-        engine3.cruise = False
 
+
+# ------------------------ engine 3b --------------------------
+
+engine3b = viper()
+engine3b.engine_ID = 4
+engine3b.cruise = True
+
+engine3b.p_0 = 0.2454 *10**5 # [Pa]
+engine3b.T_0 = 220 # [K]
+engine3b.pt_2 = engine3b.p_0 * (1 + ((engine3b.k_a - 1)/2)*0.78**2)**(engine3b.k_a/(engine3b.k_a-1))
+engine3b.Tt_2 = engine3b.T_0 * (1+ ((engine3b.k_a - 1)/ 2)*0.78**2)
+
+engine3b.Tt_4 = 1150  # [K]
+engine3b.m_dot_4 = engine3b.m_dot_air # dummy value for the airflow --> drops out of turbine
+engine3b.A_n = engine1.A_n
+engine3b.A_t = engine1.A_t
+engine3b.compressor()
+# calculate properties after compressor stage
+
+for iteration in range(10):
+    print(engine3.m_dot_air)
+
+    # calculate properties after combustion stage
+    if iteration == 0:
+        engine3b.pt_4 = engine3b.pt_3
+    else:
+        engine3b.m_fuel_rate()
+
+    engine3b.temperature_turbine()
+    engine3b.pressure_turbine()
+
+    # calculate conditions in nozzle
+    engine3b.nozzle()
+
+    if iteration == 0:
+        engine3b.m_dot_air = engine3b.m_dot_4
+
+        #engine3.cruise = False
 #--------------- printing results ------------------
-names1 = ['turbine to nozzle area ratio', 'gross thrust', 'TIT']
-values1 = [engine1.A_t/engine1.nozzle_area, engine1.gross_thrust, engine1.Tt_4]
-units1 = ['-', 'N', 'K']
-engine1.printing(names1, values1, units1)
 
-engine2.printing(names1, values1, units1)
-
-names3 = ['exit massflow', 'gross thrust', 'fuel massflow', 'inlet total pressure', 'inlet total temperature', 'compressor work', 'temp ratio']
+names = ['exit massflow', 'gross thrust', 'fuel massflow', 'inlet total pressure', 'inlet total temperature', 'compressor work', 'temp ratio']
+values1 = [engine1.m_dot_4, engine1.gross_thrust, engine1.m_dot_f, engine1.pt_2, engine1.Tt_2, (engine1.Tt_3-engine1.Tt_2)*engine1.cp_a*engine1.m_dot_air, engine1.Tt_3/engine1.Tt_2]
+values2 = [engine2.m_dot_4, engine2.gross_thrust, engine2.m_dot_f, engine2.pt_2, engine2.Tt_2, (engine2.Tt_3-engine2.Tt_2)*engine2.cp_a*engine2.m_dot_air, engine2.Tt_3/engine2.Tt_2]
 values3 = [engine3.m_dot_4, engine3.gross_thrust, engine3.m_dot_f, engine3.pt_2, engine3.Tt_2, (engine3.Tt_3-engine3.Tt_2)*engine3.cp_a*engine3.m_dot_air, engine3.Tt_3/engine3.Tt_2]
-units3 = ['kg/s', 'N', 'kg/s', 'Pa', 'K', 'w', '-']
+values3b = [engine3b.m_dot_4, engine3b.gross_thrust, engine3b.m_dot_f, engine3b.pt_2, engine3b.Tt_2, (engine3b.Tt_3-engine3b.Tt_2)*engine3b.cp_a*engine3b.m_dot_air, engine3b.Tt_3/engine3b.Tt_2]
+units = ['kg/s', 'N', 'kg/s', 'Pa', 'K', 'w', '-']
 
 
-engine3.printing(names3, values3, units3)
+engine1.printing(names, values1, units)
+engine2.printing(names, values2, units)
+engine3.printing(names, values3, units)
+engine3b.printing(names, values3b, units)
+
+
 # ------------ Questions --------------------
 
 # - How can the are ratio of turbine to nozzle be smaller than 1 if the turbine is already choked, wouldn't that mean that flow would go supersonic??

@@ -85,7 +85,6 @@ class compressor():
     def v_abs_exit(self, U):
         return U / (np.sin(self.alpha_2)-np.cos(self.alpha_2)*np.tan(self.beta_2))
 
-
     def Mach(self, T, abs_velocity):
         return abs_velocity/np.sqrt(T*self.k*self.R)
 
