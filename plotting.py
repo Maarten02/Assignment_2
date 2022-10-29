@@ -37,13 +37,6 @@ def plot_mgas_path(stages, radii, x_locs):
     plt.savefig('figures/m_gas_path.pdf')
 
 
-
-
-
-
-
-
-
 def plot_pressure_ratios(stage_pressure_ratios, n_stages_list):
     plt.figure(1)
     plt.plot(n_stages_list, stage_pressure_ratios, marker = '.')

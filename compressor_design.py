@@ -227,21 +227,6 @@ class compressor():
         # update compressor power using new found isentropic efficiency
 
 
-
-
-
-    # --- QUESTIONS ---
-
-    # - (can we assume) does the axial velocity component remain constant throughout the entire compressor?
-    # yes - for constant mean radius and repeated stage it is a valid assumption
-    # - should we match compressor with turbine and nozzle?
-    #  no really
-    # - what is stage total to total efficiency?
-    # use
-    # - pressure ratio from temp ratio
-
-
-
 viper_compressor = compressor()
 viper_compressor.stage_loop()
 viper_compressor.power_loop()
