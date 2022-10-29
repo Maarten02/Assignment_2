@@ -18,7 +18,7 @@ class viper():
         self.p_ref = 100000         # [Pa]
         self.T_ref = 288            # [K]
         self.tur_eff = 0.8          # [-]
-        self.comp_eff = 0.78       # [-]
+        self.comp_eff = 0.886530620       # [-]
         self.comb_eff = 1           # [-]
         self.nozz_eff = 1           # [-]
         self.cp_a = 1000            # [J/kg*K]
@@ -91,6 +91,8 @@ class viper():
 
         self.m_dot_f = (self.m_dot_air*self.cp_g*(self.Tt_4 - self.Tt_3))/(self.comb_eff*self.LHV)
         self.m_dot_4 = self.m_dot_air + self.m_dot_f
+        print('fuel rate updated')
+        print(self.m_dot_4 - self.m_dot_air)
         self.pt_4 = self.pt_3
 
     def nozzle(self):
@@ -179,13 +181,14 @@ engine2.m_dot_4 = engine2.m_dot_air # dummy value for the airflow
 engine2.A_n = engine1.A_n
 
 # calculate properties after compressor stage
-for iteration in range(10):
-    print(engine2.m_dot_air)
+for iteration in range(3):
+    print(engine2.m_dot_4)
     engine2.compressor()
 
     # calculate properties after combustion stage
     if iteration != 0:
         engine2.m_fuel_rate()
+
     else:
         engine2.pt_4 = engine2.pt_3
 
@@ -196,12 +199,14 @@ for iteration in range(10):
     engine2.nozzle()
     if iteration == 0:
         engine2.m_dot_air = engine2.m_dot_4
+    else:
+        engine2.m_dot_air = engine2.m_dot_4 - engine2.m_dot_f
 
 
 # -------------------- exercise 3a --------------------
 engine3 = viper()
 engine3.engine_ID = 3
-engine3.cruise = True
+
 
 engine3.p_0 = 0.2454 *10**5 # [Pa]
 engine3.T_0 = 220 # [K]
@@ -213,7 +218,7 @@ engine3.m_dot_4 = engine3.m_dot_air # dummy value for the airflow
 engine3.A_n = engine2.A_n
 
 # calculate properties after compressor stage
-for iteration in range(10):
+for iteration in range(3):
     print(engine3.m_dot_air)
     engine3.compressor()
 
@@ -230,6 +235,8 @@ for iteration in range(10):
     engine3.nozzle()
     if iteration == 0:
         engine3.m_dot_air = engine3.m_dot_4
+    else:
+        engine3.m_dot_air = engine3.m_dot_4 - engine3.m_dot_f
 
 
 # ------------------------ engine 3b --------------------------
@@ -250,7 +257,7 @@ engine3b.A_t = engine1.A_t
 engine3b.compressor()
 # calculate properties after compressor stage
 
-for iteration in range(10):
+for iteration in range(3):
     print(engine3.m_dot_air)
 
     # calculate properties after combustion stage
@@ -267,16 +274,18 @@ for iteration in range(10):
 
     if iteration == 0:
         engine3b.m_dot_air = engine3b.m_dot_4
+    else:
+        engine3b.m_dot_air = engine3b.m_dot_4 - engine3b.m_dot_f
 
         #engine3.cruise = False
 #--------------- printing results ------------------
 
-names = ['exit massflow', 'gross thrust', 'fuel massflow', 'inlet total pressure', 'inlet total temperature', 'compressor work', 'temp ratio']
-values1 = [engine1.m_dot_4, engine1.gross_thrust, engine1.m_dot_f, engine1.pt_2, engine1.Tt_2, (engine1.Tt_3-engine1.Tt_2)*engine1.cp_a*engine1.m_dot_air, engine1.Tt_3/engine1.Tt_2]
-values2 = [engine2.m_dot_4, engine2.gross_thrust, engine2.m_dot_f, engine2.pt_2, engine2.Tt_2, (engine2.Tt_3-engine2.Tt_2)*engine2.cp_a*engine2.m_dot_air, engine2.Tt_3/engine2.Tt_2]
-values3 = [engine3.m_dot_4, engine3.gross_thrust, engine3.m_dot_f, engine3.pt_2, engine3.Tt_2, (engine3.Tt_3-engine3.Tt_2)*engine3.cp_a*engine3.m_dot_air, engine3.Tt_3/engine3.Tt_2]
+names = ['air massflow', 'exit massflow', 'gross thrust', 'fuel massflow', 'inlet total pressure', 'inlet total temperature', 'compressor work', 'temp ratio']
+values1 = [engine1.m_dot_air, engine1.m_dot_4, engine1.gross_thrust, engine1.m_dot_f, engine1.pt_2, engine1.Tt_2, (engine1.Tt_3-engine1.Tt_2)*engine1.cp_a*engine1.m_dot_air, engine1.Tt_3/engine1.Tt_2]
+values2 = [engine2.m_dot_air, engine2.m_dot_4, engine2.gross_thrust, engine2.m_dot_f, engine2.pt_2, engine2.Tt_2, (engine2.Tt_3-engine2.Tt_2)*engine2.cp_a*engine2.m_dot_air, engine2.Tt_3/engine2.Tt_2]
+values3 = [engine3.m_dot_air, engine3.m_dot_4, engine3.gross_thrust, engine3.m_dot_f, engine3.pt_2, engine3.Tt_2, (engine3.Tt_3-engine3.Tt_2)*engine3.cp_a*engine3.m_dot_air, engine3.Tt_3/engine3.Tt_2]
 values3b = [engine3b.m_dot_4, engine3b.gross_thrust, engine3b.m_dot_f, engine3b.pt_2, engine3b.Tt_2, (engine3b.Tt_3-engine3b.Tt_2)*engine3b.cp_a*engine3b.m_dot_air, engine3b.Tt_3/engine3b.Tt_2]
-units = ['kg/s', 'N', 'kg/s', 'Pa', 'K', 'w', '-']
+units = ['kg/s', 'kg/s', 'N', 'kg/s', 'Pa', 'K', 'w', '-']
 
 
 engine1.printing(names, values1, units)
