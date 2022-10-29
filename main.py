@@ -168,7 +168,7 @@ engine2 = viper()
 engine2.engine_ID = 2
 engine2.Tt_2 = engine2.T_0
 engine2.pt_2 = engine2.p_0
-engine2.cruise = True
+
 
 # calculate properties after compressor stage
 #engine2.compressor()

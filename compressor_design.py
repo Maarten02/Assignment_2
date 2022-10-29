@@ -117,7 +117,7 @@ class compressor():
         return T_t - (v**2/(2*1000))
 
     def total_pressure_to_static(self, T_s, T_t, p_t):
-        return p_t*((T_t/T_s)**((self.k-1)/self.k))
+        return p_t/((T_t/T_s)**(self.k/(self.k-1)))
 
     def stage_loop(self):
 
@@ -250,12 +250,12 @@ n_stages_list = range(1, viper_compressor.n_stages+1)
 n_stages = viper_compressor.n_stages
 x_locs = viper_compressor.x_locs
 p_ratios = viper_compressor.stage_pressure_ratios
-# plotting.plot_pressure_ratios(p_ratios, n_stages_list)
-# plotting.plot_static_pres_over_total(viper_compressor.stage_pressures_static, viper_compressor.stage_pressures[0], n_stages)
-# plotting.plot_static_temp_over_total(viper_compressor.stage_temperatures_static, viper_compressor.stage_temperatures[0], n_stages)
-# plotting.plot_total_pres_over_total(viper_compressor.stage_pressures, viper_compressor.stage_pressures[0],n_stages)
-# plotting.plot_total_temp_over_total(viper_compressor.stage_temperatures, viper_compressor.stage_temperatures[0],n_stages)
-# plotting.plot_h_s_diagram(viper_compressor.stage_temperatures, viper_compressor.stage_pressures, n_stages)
+plotting.plot_pressure_ratios(p_ratios, n_stages_list)
+plotting.plot_static_pres_over_total(viper_compressor.stage_pressures_static, viper_compressor.stage_pressures[0], n_stages)
+plotting.plot_static_temp_over_total(viper_compressor.stage_temperatures_static, viper_compressor.stage_temperatures[0], n_stages)
+plotting.plot_total_pres_over_total(viper_compressor.stage_pressures, viper_compressor.stage_pressures[0],n_stages)
+plotting.plot_total_temp_over_total(viper_compressor.stage_temperatures, viper_compressor.stage_temperatures[0],n_stages)
+plotting.plot_h_s_diagram(viper_compressor.stage_temperatures, viper_compressor.stage_pressures, viper_compressor.stage_temperatures_static, viper_compressor.stage_pressures_static,n_stages)
 
 plot_radii = []
 for i in range(len(viper_compressor.tip_radii)):
